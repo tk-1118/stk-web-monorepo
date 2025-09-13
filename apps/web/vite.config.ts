@@ -3,6 +3,7 @@ import { defineConfig, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import path from 'path'
 
 export default defineConfig((): UserConfig => ({
@@ -33,17 +34,20 @@ export default defineConfig((): UserConfig => ({
       '@org/validation': path.resolve(__dirname, '../../packages/validation/src/index.ts'),
       '@org/i18n': path.resolve(__dirname, '../../packages/i18n/src/index.ts'),
       '@org/testing': path.resolve(__dirname, '../../packages/testing/src/index.ts'),
+      '@hema-web-monorepo/feat-users': path.resolve(__dirname, '../../dist/packages/feat-users/index.js'),
     }
   },
   plugins: [
     vue(),
-    // 自动导入 Vue API
+    // 自动导入 Vue API 和 Element Plus API
     AutoImport({
       imports: ['vue', 'vue-router', 'pinia'],
+      resolvers: [ElementPlusResolver()],
       dts: true
     }),
-    // 自动导入组件
+    // 自动导入组件，包括 Element Plus 组件
     Components({
+      resolvers: [ElementPlusResolver()],
       dts: true
     }),
     // TODO: Mock 中间件稍后添加

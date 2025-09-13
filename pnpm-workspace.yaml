@@ -1,5 +1,6 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+  - 'packages'
 autoInstallPeers: true
 strictPeerDependencies: false

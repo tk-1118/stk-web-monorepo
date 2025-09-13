@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": ["vite/client"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "rootDir": "src",
     "jsx": "preserve",
     "jsxImportSource": "vue",
@@ -33,13 +34,28 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.vue"],
   "references": [
     {
-      "path": "../../packages/api/tsconfig.lib.json"
+      "path": "../../packages/i18n/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/store/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/utils/tsconfig.lib.json"
     },
     {
       "path": "../../packages/hooks/tsconfig.lib.json"
     },
     {
       "path": "../../packages/ui/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/models/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/api/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/feat-users/tsconfig.lib.json"
     }
   ]
 }

@@ -1,5 +1,37 @@
 {
   "name": "@hema-web-monorepo/web",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite serve",
+    "serve": "vite serve",
+    "preview": "vite preview",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts,.vue",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "vue": "^3.5.21",
+    "vue-router": "^4.5.1",
+    "pinia": "^3.0.3",
+    "element-plus": "^2.11.2",
+    "@element-plus/icons-vue": "^2.3.1",
+    "@hema-web-monorepo/feat-users": "workspace:*",
+    "@hema-web-monorepo/api": "workspace:*",
+    "@hema-web-monorepo/models": "workspace:*",
+    "@hema-web-monorepo/ui": "workspace:*",
+    "@hema-web-monorepo/hooks": "workspace:*",
+    "@hema-web-monorepo/utils": "workspace:*",
+    "@hema-web-monorepo/store": "workspace:*",
+    "@hema-web-monorepo/i18n": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.4",
+    "typescript": "~5.9.2",
+    "vite": "^7.1.5",
+    "vue-tsc": "^2.2.8",
+    "vitest": "^3.0.0"
+  }
 }

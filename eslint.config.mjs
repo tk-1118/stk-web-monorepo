@@ -20,11 +20,32 @@ export default [
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
-            { "sourceTag": "type:app", "onlyDependOnLibsWithTags": ["type:lib"] },
-            { "sourceTag": "scope:shared", "onlyDependOnLibsWithTags": ["scope:shared"] },
-            { "sourceTag": "scope:ui", "onlyDependOnLibsWithTags": ["scope:shared", "scope:ui"] },
-            { "sourceTag": "scope:dev", "onlyDependOnLibsWithTags": ["scope:dev", "scope:shared"] },
-            { "sourceTag": "type:lib", "onlyDependOnLibsWithTags": ["type:lib"] }
+            { sourceTag: 'type:app', onlyDependOnLibsWithTags: ['type:lib'] },
+            {
+              sourceTag: 'scope:shared',
+              onlyDependOnLibsWithTags: ['scope:shared'],
+            },
+            {
+              sourceTag: 'scope:ui',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:ui'],
+            },
+            {
+              sourceTag: 'scope:dev',
+              onlyDependOnLibsWithTags: ['scope:dev', 'scope:shared'],
+            },
+            {
+              sourceTag: 'scope:feature',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:dev'],
+            },
+            {
+              sourceTag: 'feature:users',
+              notDependOnLibsWithTags: ['feature:orders'],
+            },
+            {
+              sourceTag: 'feature:orders',
+              notDependOnLibsWithTags: ['feature:users'],
+            },
+            { sourceTag: 'type:lib', onlyDependOnLibsWithTags: ['type:lib'] },
           ],
         },
       ],
