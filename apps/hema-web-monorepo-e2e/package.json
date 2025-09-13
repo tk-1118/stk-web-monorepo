@@ -1,0 +1,10 @@
+{
+  "name": "@hema-web-monorepo/hema-web-monorepo-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@hema-web-monorepo/hema-web-monorepo"
+    ]
+  }
+}

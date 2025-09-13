@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/hema-web-monorepo-e2e"
+    },
+    {
+      "path": "./apps/hema-web-monorepo"
+    }
+  ]
+}
