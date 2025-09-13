@@ -20,10 +20,11 @@ export default [
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
-            {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
-            },
+            { "sourceTag": "type:app", "onlyDependOnLibsWithTags": ["type:lib"] },
+            { "sourceTag": "scope:shared", "onlyDependOnLibsWithTags": ["scope:shared"] },
+            { "sourceTag": "scope:ui", "onlyDependOnLibsWithTags": ["scope:shared", "scope:ui"] },
+            { "sourceTag": "scope:dev", "onlyDependOnLibsWithTags": ["scope:dev", "scope:shared"] },
+            { "sourceTag": "type:lib", "onlyDependOnLibsWithTags": ["type:lib"] }
           ],
         },
       ],

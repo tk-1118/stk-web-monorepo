@@ -4,10 +4,55 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/hema-web-monorepo-e2e"
+      "path": "./packages/models"
     },
     {
-      "path": "./apps/hema-web-monorepo"
+      "path": "./packages/enums"
+    },
+    {
+      "path": "./packages/constants"
+    },
+    {
+      "path": "./packages/config"
+    },
+    {
+      "path": "./packages/api"
+    },
+    {
+      "path": "./packages/store"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/mocks"
+    },
+    {
+      "path": "./packages/utils"
+    },
+    {
+      "path": "./packages/storage"
+    },
+    {
+      "path": "./packages/hooks"
+    },
+    {
+      "path": "./packages/icons"
+    },
+    {
+      "path": "./packages/validation"
+    },
+    {
+      "path": "./packages/i18n"
+    },
+    {
+      "path": "./packages/testing"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/web-e2e"
     }
   ]
 }

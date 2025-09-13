@@ -74,5 +74,25 @@
     "test": {
       "dependsOn": ["^build"]
     }
+  },
+  "projects": {
+    "web":        { "tags": ["type:app", "scope:web"] },
+
+    "models":     { "tags": ["type:lib", "scope:shared"] },
+    "enums":      { "tags": ["type:lib", "scope:shared"] },
+    "constants":  { "tags": ["type:lib", "scope:shared"] },
+    "config":     { "tags": ["type:lib", "scope:shared"] },
+    "api":        { "tags": ["type:lib", "scope:shared"] },
+    "store":      { "tags": ["type:lib", "scope:shared"] },
+    "ui":         { "tags": ["type:lib", "scope:shared"] },
+    "mocks":      { "tags": ["type:lib", "scope:dev"] },
+    "utils":      { "tags": ["type:lib", "scope:shared"] },
+    "storage":    { "tags": ["type:lib", "scope:shared"] },
+    "hooks":      { "tags": ["type:lib", "scope:shared"] },
+
+    "icons":      { "tags": ["type:lib", "scope:shared", "scope:ui"] },
+    "validation": { "tags": ["type:lib", "scope:shared"] },
+    "i18n":       { "tags": ["type:lib", "scope:shared"] },
+    "testing":    { "tags": ["type:lib", "scope:dev"] }
   }
 }

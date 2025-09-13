@@ -16,6 +16,24 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@hema-web-monorepo/source"]
+    "baseUrl": ".",
+    "customConditions": ["@hema-web-monorepo/source"],
+    "paths": {
+      "@org/api": ["packages/api/src/index.ts"],
+      "@org/config": ["packages/config/src/index.ts"],
+      "@org/constants": ["packages/constants/src/index.ts"],
+      "@org/enums": ["packages/enums/src/index.ts"],
+      "@org/hooks": ["packages/hooks/src/index.ts"],
+      "@org/i18n": ["packages/i18n/src/index.ts"],
+      "@org/icons": ["packages/icons/src/index.ts"],
+      "@org/mocks": ["packages/mocks/src/index.ts"],
+      "@org/models": ["packages/models/src/index.ts"],
+      "@org/storage": ["packages/storage/src/index.ts"],
+      "@org/store": ["packages/store/src/index.ts"],
+      "@org/testing": ["packages/testing/src/index.ts"],
+      "@org/ui": ["packages/ui/src/index.ts"],
+      "@org/utils": ["packages/utils/src/index.ts"],
+      "@org/validation": ["packages/validation/src/index.ts"]
+    }
   }
 }

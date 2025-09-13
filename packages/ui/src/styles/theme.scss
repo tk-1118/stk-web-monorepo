@@ -1,0 +1,22 @@
+/**
+ * 主题样式变量
+ * 定义明暗主题的 CSS 变量
+ */
+
+:root {
+  --bg-color: #fff;
+  --text-color: #1f2328;
+  --border-color: #e5e7eb;
+}
+
+.dark {
+  --bg-color: #0b0c10;
+  --text-color: #e6edf3;
+  --border-color: #2d333b;
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
