@@ -359,6 +359,7 @@ pnpm gen:feat blog-posts --entity=BlogPost --chinese=博客文章 --with-api
 - `--no-mock`: 不生成 Mock 数据文件
 - `--no-i18n`: 不生成国际化文件
 - `--no-store`: 不生成状态管理文件
+- `--no-auto-integrate`: 不自动集成到 apps/web（默认会自动集成）
 
 **生成的文件结构：**
 ```bash
@@ -512,30 +513,78 @@ pnpm nx build feat-<domain>
 ls -la dist/packages/feat-<domain>/
 ```
 
-### 6. 集成到应用
-生成器创建模块后，需要手动集成到主应用：
+### 6. 自动集成到应用（🆕 全自动化）
+生成器现在支持**完全自动化集成**，无需手动配置：
 
-1. **安装依赖**：`pnpm install`
-2. **在应用外壳中添加依赖**：
+#### ✨ 自动装配功能
+生成器会自动完成以下集成步骤：
+
+1. **✅ 自动更新依赖**：
    ```json
-   // apps/web/package.json
+   // apps/web/package.json - 自动添加
    {
      "dependencies": {
        "@hema-web-monorepo/feat-<domain>": "workspace:*"
      }
    }
    ```
-3. **注册路由**：
+
+2. **✅ 自动注册路由**：
    ```typescript
-   // apps/web/src/router/index.ts
+   // apps/web/src/router/index.ts - 自动添加
    import { routes as domainRoutes } from '@hema-web-monorepo/feat-<domain>'
    
    const featureRoutes: RouteRecordRaw[] = [
      ...existingRoutes,
-     ...domainRoutes
+     ...domainRoutes  // 自动插入
    ]
    ```
-4. **测试功能完整性**
+
+3. **✅ 自动配置 Vite 别名**：
+   ```typescript
+   // apps/web/vite.config.ts - 自动添加
+   resolve: {
+     alias: {
+       '@hema-web-monorepo/feat-<domain>': path.resolve(__dirname, '../../dist/packages/feat-<domain>/index.js')
+     }
+   }
+   ```
+
+4. **✅ 自动安装依赖**：执行 `pnpm install` 确保新依赖生效
+
+#### 🔍 智能重复检测
+- **模块存在检测**：避免重复创建同名模块
+- **依赖重复检测**：跳过已存在的依赖配置
+- **路由重复检测**：避免重复注册路由
+- **别名重复检测**：跳过已配置的 Vite 别名
+
+#### 🎛️ 装配控制选项
+```bash
+# 默认自动装配（推荐）
+pnpm gen:feat products --entity=Product --chinese=产品 --with-api
+
+# 禁用自动装配
+pnpm gen:feat analytics --chinese=数据分析 --no-auto-integrate
+```
+
+#### 📊 装配结果反馈
+```bash
+🔗 开始集成到 apps/web...
+✅ 已更新 apps/web/package.json，添加依赖: @hema-web-monorepo/feat-products
+✅ 已更新 apps/web/src/router/index.ts，添加路由: productsRoutes
+✅ 已更新 apps/web/vite.config.ts，添加别名: @hema-web-monorepo/feat-products
+✅ 成功集成到 apps/web
+
+📝 后续步骤:
+   1. pnpm dev  # 启动开发服务器
+   2. 访问 /products 路径测试功能
+   3. 根据需要自定义业务逻辑
+```
+
+#### 🛡️ 错误处理和降级
+- 如果某个配置文件不存在，会给出警告但不中断流程
+- 支持部分集成失败的优雅降级
+- 提供详细的错误信息和修复建议
 
 ## 🚨 常见错误和解决方案
 

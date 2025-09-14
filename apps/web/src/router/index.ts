@@ -7,6 +7,8 @@ import Home from '../pages/home.vue'
 
 // 导入领域特性包的路由
 import { routes as usersRoutes } from '@hema-web-monorepo/feat-users'
+import { routes as analyticsRoutes } from '@hema-web-monorepo/feat-analytics'
+import { routes as ordersRoutes } from '@hema-web-monorepo/feat-orders'
 
 /** 基础路由配置（应用外壳层面的路由） */
 const baseRoutes: RouteRecordRaw[] = [
@@ -45,10 +47,8 @@ const baseRoutes: RouteRecordRaw[] = [
 
 /** 领域特性路由集合 */
 const featureRoutes: RouteRecordRaw[] = [
-  ...usersRoutes
+  ...usersRoutes,
   // 未来可以添加更多领域特性包的路由
-  // ...ordersRoutes,
-  // ...productsRoutes
 ]
 
 /** 合并所有路由 */

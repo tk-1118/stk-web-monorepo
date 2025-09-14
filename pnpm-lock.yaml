@@ -186,6 +186,12 @@ importers:
       '@hema-web-monorepo/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@hema-web-monorepo/feat-analytics':
+        specifier: workspace:*
+        version: link:../../packages/feat-analytics
+      '@hema-web-monorepo/feat-orders':
+        specifier: workspace:*
+        version: link:../../packages/feat-orders
       '@hema-web-monorepo/feat-users':
         specifier: workspace:*
         version: link:../../packages/feat-users
@@ -262,7 +268,7 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
-  packages/feat-products:
+  packages/feat-analytics:
     dependencies:
       element-plus:
         specifier: ^2.11.2
@@ -305,7 +311,7 @@ importers:
         specifier: ^2.2.8
         version: 2.2.12(typescript@5.9.2)
 
-  packages/feat-user-profiles:
+  packages/feat-orders:
     dependencies:
       element-plus:
         specifier: ^2.11.2

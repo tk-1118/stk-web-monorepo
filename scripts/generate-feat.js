@@ -29,6 +29,7 @@ class FeatGeneratorConfig {
     this.withMock = options.withMock !== false // 默认生成 mock
     this.withI18n = options.withI18n !== false // 默认生成国际化
     this.withStore = options.withStore !== false // 默认生成状态管理
+    this.autoIntegrate = options.autoIntegrate !== false // 默认自动集成到 apps/web
 
     // 路径配置
     this.rootDir = process.cwd()
@@ -97,19 +98,18 @@ class TemplateGenerator {
         `export { ${this.config.toCamelCase(this.config.featName)}Api } from './api/${this.config.featName}.service'`
       )
 
-      // 启用 API 导入 - 需要在变量替换后进行
+      // 启用 API 导入 - 只导入 API，不导入实体类型（避免与本地定义冲突）
       const apiImportPattern = `// import { ${this.config.toCamelCase(this.config.featName)}Api, type ${this.config.entityName}, type Query${this.config.toPascalCase(this.config.featName)}Request } from '../api/${this.config.featName}.service'`
-      const apiImportReplacement = `import { ${this.config.toCamelCase(this.config.featName)}Api, type ${this.config.entityName}, type Query${this.config.toPascalCase(this.config.featName)}Request } from '../api/${this.config.featName}.service'`
+      const apiImportReplacement = `import { ${this.config.toCamelCase(this.config.featName)}Api } from '../api/${this.config.featName}.service'`
       result = result.replace(apiImportPattern, apiImportReplacement)
 
       // 启用真实 API 调用
       const apiCallPattern = `// const response = await ${this.config.toCamelCase(this.config.featName)}Api.getList(queryParams)`
-      const apiCallReplacement = `const response = await ${this.config.toCamelCase(this.config.featName)}Api.getList(queryParams)`
+      const apiCallReplacement = `const response = await ${this.config.toCamelCase(this.config.featName)}Api.getList(params)`
       result = result.replace(apiCallPattern, apiCallReplacement)
 
-      // 替换其他 API 调用
-      result = result.replace(/\/\/ TODO: 实现 API 调用[\s\S]*?\/\/ 模拟数据[\s\S]*?mockResponse = \{[\s\S]*?\}/g,
-        `const response = await ${this.config.toCamelCase(this.config.featName)}Api.getList(queryParams)`)
+      // 替换模拟数据相关的引用
+      result = result.replace(/mockResponse/g, 'response')
 
       // 替换所有对 API 的引用
       result = result.replace(/Parameters<typeof userProfilesApi/g, `Parameters<typeof ${this.config.toCamelCase(this.config.featName)}Api`)
@@ -144,6 +144,233 @@ class TemplateGenerator {
 }
 
 /**
+ * Web 应用集成器
+ * 负责将生成的 feat 模块自动集成到 apps/web 中
+ */
+class WebAppIntegrator {
+  constructor(config) {
+    this.config = config
+    this.webAppDir = path.join(this.config.rootDir, 'apps', 'web')
+    this.webPackageJsonPath = path.join(this.webAppDir, 'package.json')
+    this.webRouterPath = path.join(this.webAppDir, 'src', 'router', 'index.ts')
+    this.webViteConfigPath = path.join(this.webAppDir, 'vite.config.ts')
+  }
+
+  /**
+   * 更新 web 应用的 package.json，添加新的 feat 依赖
+   */
+  updateWebPackageJson() {
+    if (!fs.existsSync(this.webPackageJsonPath)) {
+      console.warn('⚠️  未找到 apps/web/package.json，跳过依赖更新')
+      return false
+    }
+
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(this.webPackageJsonPath, 'utf-8'))
+      const featPackageName = `@hema-web-monorepo/feat-${this.config.featName}`
+
+      // 检查依赖是否已存在
+      if (packageJson.dependencies && packageJson.dependencies[featPackageName]) {
+        console.log(`ℹ️  依赖 ${featPackageName} 已存在，跳过添加`)
+        return true
+      }
+
+      // 添加新的依赖
+      if (!packageJson.dependencies) {
+        packageJson.dependencies = {}
+      }
+
+      packageJson.dependencies[featPackageName] = 'workspace:*'
+
+      // 按字母顺序排序依赖
+      const sortedDependencies = {}
+      Object.keys(packageJson.dependencies)
+        .sort()
+        .forEach(key => {
+          sortedDependencies[key] = packageJson.dependencies[key]
+        })
+      packageJson.dependencies = sortedDependencies
+
+      // 写回文件
+      fs.writeFileSync(this.webPackageJsonPath, JSON.stringify(packageJson, null, 2) + '\n', 'utf-8')
+      console.log(`✅ 已更新 apps/web/package.json，添加依赖: ${featPackageName}`)
+      return true
+    } catch (error) {
+      console.warn(`⚠️  更新 apps/web/package.json 失败: ${error.message}`)
+      return false
+    }
+  }
+
+  /**
+   * 更新 web 应用的路由配置，添加新的 feat 路由
+   */
+  updateWebRouter() {
+    if (!fs.existsSync(this.webRouterPath)) {
+      console.warn('⚠️  未找到 apps/web/src/router/index.ts，跳过路由更新')
+      return false
+    }
+
+    try {
+      let routerContent = fs.readFileSync(this.webRouterPath, 'utf-8')
+      const featPackageName = `@hema-web-monorepo/feat-${this.config.featName}`
+      const routesVariableName = `${this.config.toCamelCase(this.config.featName)}Routes`
+
+      // 检查导入是否已存在
+      const importStatement = `import { routes as ${routesVariableName} } from '${featPackageName}'`
+      if (routerContent.includes(importStatement)) {
+        console.log(`ℹ️  路由导入 ${routesVariableName} 已存在，跳过添加`)
+        return true
+      }
+
+      // 1. 添加导入语句
+      const existingImportMatch = routerContent.match(/import { routes as \w+Routes } from '@hema-web-monorepo\/feat-\w+'/)
+
+      if (existingImportMatch) {
+        // 在最后一个 feat 导入语句后添加新的导入
+        const lastImportIndex = routerContent.lastIndexOf('import { routes as')
+        const lineEnd = routerContent.indexOf('\n', lastImportIndex)
+        routerContent = routerContent.slice(0, lineEnd + 1) + importStatement + '\n' + routerContent.slice(lineEnd + 1)
+      } else {
+        // 在用户路由导入后添加
+        const usersImportIndex = routerContent.indexOf("import { routes as usersRoutes } from '@hema-web-monorepo/feat-users'")
+        if (usersImportIndex !== -1) {
+          const lineEnd = routerContent.indexOf('\n', usersImportIndex)
+          routerContent = routerContent.slice(0, lineEnd + 1) + importStatement + '\n' + routerContent.slice(lineEnd + 1)
+        }
+      }
+
+      // 2. 在 featureRoutes 数组中添加新路由 - 改进的逻辑
+      // 检查路由是否已存在
+      if (routerContent.includes(`...${routesVariableName}`)) {
+        console.log(`ℹ️  路由 ${routesVariableName} 已存在于 featureRoutes 中，跳过添加`)
+        return true
+      }
+
+      // 查找 featureRoutes 数组的定义
+      const featureRoutesPattern = /const featureRoutes: RouteRecordRaw\[\] = \[([\s\S]*?)\]/
+      const featureRoutesMatch = routerContent.match(featureRoutesPattern)
+
+      if (featureRoutesMatch) {
+        const arrayContent = featureRoutesMatch[1]
+
+        // 查找注释行的位置，在注释前插入新路由
+        const commentPattern = /(\s*)(\/\/ 未来可以添加更多领域特性包的路由)/
+        const commentMatch = arrayContent.match(commentPattern)
+
+        let newArrayContent
+        if (commentMatch) {
+          // 在注释前添加新路由
+          const beforeComment = arrayContent.substring(0, arrayContent.indexOf(commentMatch[0]))
+          const afterComment = arrayContent.substring(arrayContent.indexOf(commentMatch[0]))
+
+          // 确保在最后一个路由后添加逗号和新路由
+          const trimmedBefore = beforeComment.trim()
+          const needsComma = trimmedBefore && !trimmedBefore.endsWith(',')
+          const comma = needsComma ? ',' : ''
+
+          newArrayContent = `${beforeComment}${comma}\n  ...${routesVariableName}\n  ${afterComment}`
+        } else {
+          // 如果没有注释，直接在数组末尾添加
+          const trimmedContent = arrayContent.trim()
+          const needsComma = trimmedContent && !trimmedContent.endsWith(',')
+          const comma = needsComma ? ',' : ''
+
+          newArrayContent = `${arrayContent}${comma}\n  ...${routesVariableName}\n  // 未来可以添加更多领域特性包的路由\n`
+        }
+
+        // 替换整个数组定义
+        const newArrayDefinition = `const featureRoutes: RouteRecordRaw[] = [${newArrayContent}]`
+        routerContent = routerContent.replace(featureRoutesPattern, newArrayDefinition)
+      }
+
+      // 写回文件
+      fs.writeFileSync(this.webRouterPath, routerContent, 'utf-8')
+      console.log(`✅ 已更新 apps/web/src/router/index.ts，添加路由: ${routesVariableName}`)
+      return true
+    } catch (error) {
+      console.warn(`⚠️  更新路由配置失败: ${error.message}`)
+      return false
+    }
+  }
+
+  /**
+   * 更新 web 应用的 vite.config.ts，添加新的 feat 模块别名
+   */
+  updateWebViteConfig() {
+    if (!fs.existsSync(this.webViteConfigPath)) {
+      console.warn('⚠️  未找到 apps/web/vite.config.ts，跳过 Vite 配置更新')
+      return false
+    }
+
+    try {
+      let viteConfigContent = fs.readFileSync(this.webViteConfigPath, 'utf-8')
+      const featPackageName = `@hema-web-monorepo/feat-${this.config.featName}`
+      const aliasKey = featPackageName
+      const aliasValue = `path.resolve(__dirname, '../../dist/packages/feat-${this.config.featName}/index.js')`
+
+      // 检查别名是否已存在
+      const aliasPattern = new RegExp(`'${featPackageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}':\\s*path\\.resolve`)
+      if (aliasPattern.test(viteConfigContent)) {
+        console.log(`ℹ️  Vite 别名 ${aliasKey} 已存在，跳过添加`)
+        return true
+      }
+
+      // 构建新的别名行
+      const newAliasLine = `      '${aliasKey}': ${aliasValue},`
+
+      // 查找现有的 feat 别名位置
+      const existingFeatAliasPattern = /'@hema-web-monorepo\/feat-[\w-]+': path\.resolve\(__dirname, '\.\.\/\.\.\/dist\/packages\/feat-[\w-]+\/index\.js'\),/g
+      const existingFeatAliases = [...viteConfigContent.matchAll(existingFeatAliasPattern)]
+
+      if (existingFeatAliases.length > 0) {
+        // 在最后一个 feat 别名后添加新别名
+        const lastMatch = existingFeatAliases[existingFeatAliases.length - 1]
+        const lastMatchEnd = lastMatch.index + lastMatch[0].length
+        const lineEnd = viteConfigContent.indexOf('\n', lastMatchEnd)
+        viteConfigContent = viteConfigContent.slice(0, lineEnd + 1) + newAliasLine + '\n' + viteConfigContent.slice(lineEnd + 1)
+      } else {
+        // 在 alias 对象的结束括号前添加
+        const aliasEndPattern = /(\s+)}\s*\n\s*}/
+        const aliasEndMatch = viteConfigContent.match(aliasEndPattern)
+        if (aliasEndMatch) {
+          const insertPosition = aliasEndMatch.index
+          viteConfigContent = viteConfigContent.slice(0, insertPosition) +
+            `${aliasEndMatch[1]}${newAliasLine}\n${aliasEndMatch[1]}` +
+            viteConfigContent.slice(insertPosition)
+        }
+      }
+
+      // 写回文件
+      fs.writeFileSync(this.webViteConfigPath, viteConfigContent, 'utf-8')
+      console.log(`✅ 已更新 apps/web/vite.config.ts，添加别名: ${aliasKey}`)
+      return true
+    } catch (error) {
+      console.warn(`⚠️  更新 Vite 配置失败: ${error.message}`)
+      return false
+    }
+  }
+
+  /**
+   * 执行完整的 web 应用集成
+   */
+  integrate() {
+    console.log('🔗 开始集成到 apps/web...')
+
+    const packageJsonUpdated = this.updateWebPackageJson()
+    const routerUpdated = this.updateWebRouter()
+    const viteConfigUpdated = this.updateWebViteConfig()
+
+    if (packageJsonUpdated && routerUpdated && viteConfigUpdated) {
+      console.log('✅ 成功集成到 apps/web')
+      return true
+    } else {
+      console.log('⚠️  部分集成失败，请手动检查和修复')
+      return false
+    }
+  }
+}
+
+/**
  * feat 模块生成器主类
  * 协调整个生成过程
  */
@@ -151,6 +378,7 @@ class FeatGenerator {
   constructor(config) {
     this.config = config
     this.templateGenerator = new TemplateGenerator(config)
+    this.webAppIntegrator = new WebAppIntegrator(config)
   }
 
   /**
@@ -302,7 +530,7 @@ class FeatGenerator {
       })
       console.log('✅ 依赖安装完成')
     } catch (error) {
-      console.warn('⚠️  依赖安装失败，请手动运行 pnpm install')
+      console.warn('⚠️  依赖安装失败，请手动运行 pnpm install:', error.message)
     }
   }
 
@@ -319,6 +547,7 @@ class FeatGenerator {
     console.log(`   - 包含 Mock: ${this.config.withMock ? '是' : '否'}`)
     console.log(`   - 包含国际化: ${this.config.withI18n ? '是' : '否'}`)
     console.log(`   - 包含状态管理: ${this.config.withStore ? '是' : '否'}`)
+    console.log(`   - 自动集成到 Web: ${this.config.autoIntegrate ? '是' : '否'}`)
     console.log('')
 
     try {
@@ -343,14 +572,34 @@ class FeatGenerator {
       // 7. 安装依赖
       this.installDependencies()
 
+      // 8. 自动集成到 apps/web（如果启用）
+      if (this.config.autoIntegrate) {
+        const integrationSuccess = this.webAppIntegrator.integrate()
+        if (integrationSuccess) {
+          console.log('')
+          console.log('🔄 重新安装依赖以应用集成更改...')
+          this.installDependencies()
+        }
+      }
+
       console.log('')
       console.log(`🎉 feat-${this.config.featName} 模块生成完成！`)
       console.log(`📁 模块路径: ${path.relative(this.config.rootDir, this.config.featDir)}`)
-      console.log('')
-      console.log('📝 后续步骤:')
-      console.log(`   1. cd ${path.relative(this.config.rootDir, this.config.featDir)}`)
-      console.log('   2. pnpm build  # 构建模块')
-      console.log('   3. 在主应用中导入和使用该模块')
+
+      if (this.config.autoIntegrate) {
+        console.log('✅ 已自动集成到 apps/web')
+        console.log('')
+        console.log('📝 后续步骤:')
+        console.log('   1. pnpm dev  # 启动开发服务器')
+        console.log(`   2. 访问 /${this.config.featName} 路径测试功能`)
+        console.log('   3. 根据需要自定义业务逻辑')
+      } else {
+        console.log('')
+        console.log('📝 后续步骤:')
+        console.log(`   1. cd ${path.relative(this.config.rootDir, this.config.featDir)}`)
+        console.log('   2. pnpm build  # 构建模块')
+        console.log('   3. 在主应用中导入和使用该模块')
+      }
 
     } catch (error) {
       console.error('❌ 生成失败:', error.message)
@@ -400,6 +649,9 @@ class CommandLineParser {
           case 'no-store':
             options.withStore = false
             break
+          case 'no-auto-integrate':
+            options.autoIntegrate = false
+            break
           default:
             console.warn(`⚠️  未知选项: --${key}`)
         }
@@ -426,15 +678,18 @@ feat-xxx 功能模块生成器
   --no-mock            不生成 Mock 数据文件
   --no-i18n            不生成国际化文件
   --no-store           不生成状态管理文件
+  --no-auto-integrate  不自动集成到 apps/web (默认会自动集成)
 
 示例:
   node scripts/generate-feat.js products --entity=Product --chinese=产品
   node scripts/generate-feat.js orders --entity=Order --chinese=订单 --with-api
   node scripts/generate-feat.js notifications --chinese=通知 --no-mock --no-i18n
+  node scripts/generate-feat.js analytics --chinese=数据分析 --no-auto-integrate
 
 AI 智能体使用示例:
   node scripts/generate-feat.js blog-posts --entity=BlogPost --chinese=博客文章 --with-api
   node scripts/generate-feat.js user-profiles --entity=UserProfile --chinese=用户档案
+  node scripts/generate-feat.js dashboard --chinese=仪表盘 --with-api --no-auto-integrate
 `)
   }
 }
@@ -474,6 +729,7 @@ if (require.main === module) {
 module.exports = {
   FeatGeneratorConfig,
   TemplateGenerator,
+  WebAppIntegrator,
   FeatGenerator,
   CommandLineParser
 }

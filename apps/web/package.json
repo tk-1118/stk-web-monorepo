@@ -13,19 +13,19 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "vue": "^3.5.21",
-    "vue-router": "^4.5.1",
-    "pinia": "^3.0.3",
-    "element-plus": "^2.11.2",
     "@element-plus/icons-vue": "^2.3.1",
-    "@hema-web-monorepo/feat-users": "workspace:*",
     "@hema-web-monorepo/api": "workspace:*",
-    "@hema-web-monorepo/models": "workspace:*",
-    "@hema-web-monorepo/ui": "workspace:*",
+    "@hema-web-monorepo/feat-users": "workspace:*",
     "@hema-web-monorepo/hooks": "workspace:*",
-    "@hema-web-monorepo/utils": "workspace:*",
+    "@hema-web-monorepo/i18n": "workspace:*",
+    "@hema-web-monorepo/models": "workspace:*",
     "@hema-web-monorepo/store": "workspace:*",
-    "@hema-web-monorepo/i18n": "workspace:*"
+    "@hema-web-monorepo/ui": "workspace:*",
+    "@hema-web-monorepo/utils": "workspace:*",
+    "element-plus": "^2.11.2",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.21",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
