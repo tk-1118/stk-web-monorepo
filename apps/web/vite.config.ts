@@ -5,6 +5,8 @@ import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import path from 'path'
+// 导入 Mock 插件 - 使用相对路径避免依赖问题
+import { createViteMockPlugin } from '../../packages/mocks/dist/index.js'
 
 export default defineConfig((): UserConfig => ({
   root: __dirname,
@@ -50,7 +52,23 @@ export default defineConfig((): UserConfig => ({
       resolvers: [ElementPlusResolver()],
       dts: true
     }),
-    // TODO: Mock 中间件稍后添加
+    // Mock 插件 - 提供开发环境的 API Mock 服务（零汇总文件方案）
+    createViteMockPlugin({
+      // 仅匹配 /api 前缀的请求
+      base: '/api',
+      // 启用请求日志
+      log: true,
+      // 强制启用插件
+      enabled: true,
+      // 自定义扫描模式，只扫描 .mock.ts 文件
+      globs: [
+        'packages/feat-*/mocks/**/*.mock.ts',
+        'packages/feat-*/mocks/**/*.mock.js'
+      ],
+      // 可以通过环境变量控制启用的 Feature
+      // include: ['feat-users'], // 仅启用用户模块的 Mock
+      // exclude: ['feat-analytics'], // 排除分析模块的 Mock
+    }),
   ],
   // Uncomment this if you are using workers.
   // worker: {

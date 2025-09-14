@@ -1,19 +1,26 @@
 /**
- * Mock 数据中间件
- * 为开发环境提供模拟数据服务
+ * Mock 系统统一导出
+ * 提供完整的 Mock 数据解决方案
  */
-import { users } from './routes/user'
 
-/** Mock 中间件函数 */
-export function mockMiddleware() {
-  return (req: any, res: any, next: any) => {
-    // 处理用户列表请求
-    if (req.url?.startsWith('/api/users')) {
-      const data = users()
-      res.setHeader('Content-Type', 'application/json; charset=utf-8')
-      res.end(JSON.stringify(data))
-      return
-    }
-    next()
-  }
-}
+// 核心类型定义
+export * from './types'
+
+// 工具函数
+export * from './utils'
+
+// 注册与汇聚机制
+export * from './registry'
+
+// 中间件
+export * from './middleware'
+
+// Vite 插件
+export * from './plugin.vite'
+
+// 独立服务器
+export * from './server'
+
+// 向后兼容的导出
+export { createMockMiddleware as mockMiddleware } from './middleware'
+export { ViteMockPlugin as MockPlugin } from './plugin.vite'

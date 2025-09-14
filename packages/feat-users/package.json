@@ -36,6 +36,7 @@
     "unplugin-vue-components": "^29.0.0",
     "unplugin-auto-import": "^20.1.0",
     "@hema-web-monorepo/api": "workspace:*",
-    "@hema-web-monorepo/models": "workspace:*"
+    "@hema-web-monorepo/models": "workspace:*",
+    "@hema-web-monorepo/mocks": "workspace:*"
   }
 }

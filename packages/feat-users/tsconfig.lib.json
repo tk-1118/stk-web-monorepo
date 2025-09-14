@@ -16,6 +16,9 @@
     },
     {
       "path": "../models/tsconfig.lib.json"
+    },
+    {
+      "path": "../mocks/tsconfig.lib.json"
     }
   ]
 }

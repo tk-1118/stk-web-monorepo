@@ -561,46 +561,223 @@ export const domainApi = new DomainApiService()
 
 ## 🎭 Mock数据规范
 
-### Mock服务模板
-```typescript
-/**
- * 领域Mock数据
- * 提供开发和测试用的模拟数据
- */
+### 🆕 Mock 系统架构（零汇总文件升级版）
 
-// 模拟数据
-export const mockData = [
+本项目采用"分治 + 汇聚"的混合 Mock 方案，实现了领域内聚与统一管理的完美平衡：
+
+#### 核心特性
+- **领域内聚**：Mock 数据定义在各 Feature 内，就近维护
+- **统一汇聚**：基础能力沉到 packages/mocks，自动汇聚各 Feature 的 Mock
+- **灵活控制**：支持按环境变量选择启/停哪些 Feature 的 Mock
+- **多端共用**：支持 Vite 插件（前端）和独立服务（移动端/后端）
+- **🆕 零汇总文件**：无需 index.ts，直接放 .mock.ts 文件即可
+- **🆕 纯 TS 即插即用**：使用 Vite ssrLoadModule 直接加载 TypeScript 文件
+- **🆕 智能热更新**：修改 .mock.ts 文件后自动重新加载，无需重启
+
+#### 目录结构
+```
+packages/mocks/                     # Mock 系统核心
+├── src/
+│   ├── types.ts                   # 核心类型定义
+│   ├── utils.ts                   # 工具函数
+│   ├── registry.ts                # Mock 汇聚机制（支持 Vite ssrLoadModule）
+│   ├── runtime-middleware.ts      # 运行时中间件工厂
+│   ├── plugin.vite.ts             # Vite 插件（支持热更新）
+│   ├── server.ts                  # 独立服务器
+│   └── index.ts                   # 统一导出
+
+packages/feat-users/                # Feature 示例
+├── mocks/
+│   ├── users.mock.ts              # 🆕 直接放 .mock.ts 文件
+│   ├── auth.mock.ts               # 🆕 可以有多个 .mock.ts 文件
+│   └── profile.mock.ts            # 🆕 自动扫描和合并
+└── src/...
+```
+
+### 🆕 零汇总文件的声明式 Mock 定义
+
+#### 🆕 直接创建 .mock.ts 文件
+```typescript
+// packages/feat-users/mocks/users.mock.ts - 🆕 直接放 .mock.ts 文件
+import { defineMocks, type MockRoute } from '@hema-web-monorepo/mocks'
+import { mockUsers } from '../src/mocks/users.mock'
+
+const routes: MockRoute[] = [
   {
-    id: '1',
-    name: '示例数据',
-    // ... 其他字段
+    method: 'GET',
+    path: '/api/users',
+    handler: async (req, res, ctx) => {
+      console.log('[feat-users] 处理用户列表请求:', ctx.query)
+      
+      // 🆕 模拟网络延迟
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      const { page = '1', size = '10', keyword = '' } = ctx.query
+      
+      // 🆕 增强的搜索逻辑
+      let filteredUsers = [...mockUsers]
+      if (keyword) {
+        const searchTerm = keyword.toLowerCase()
+        filteredUsers = mockUsers.filter(user =>
+          user.name.toLowerCase().includes(searchTerm) ||
+          user.username.toLowerCase().includes(searchTerm) ||
+          user.email.toLowerCase().includes(searchTerm)
+        )
+      }
+      
+      const pageNum = Number(page)
+      const pageSize = Number(size)
+      const total = filteredUsers.length
+      const startIndex = (pageNum - 1) * pageSize
+      const data = filteredUsers.slice(startIndex, startIndex + pageSize)
+
+      return {
+        data: { data, total, page: pageNum, size: pageSize },
+        message: '获取用户列表成功',
+        code: 200
+      }
+    }
+  },
+  {
+    method: 'GET',
+    path: /^\/api\/users\/(\d+)$/,  // 支持正则表达式
+    handler: async (req, res, ctx) => {
+      console.log('[feat-users] 处理用户详情请求:', ctx.params)
+      
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      const id = ctx.params?.[1]     // 自动提取路径参数
+      if (!id) {
+        return { data: null, message: '用户ID不能为空', code: 400 }
+      }
+
+      const user = mockUsers.find(u => u.id === id)
+      if (!user) {
+        return { data: null, message: '用户不存在', code: 404 }
+      }
+      
+      return { data: user, message: '获取用户详情成功', code: 200 }
+    }
   }
 ]
 
-// Mock API服务
-export class MockApiService {
-  /**
-   * 模拟网络延迟
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
+// 🆕 直接 export default，无需 index.ts 汇总
+export default defineMocks('feat-users', routes)
+```
 
-  /**
-   * 模拟API响应
-   */
-  async getData() {
-    await this.delay(300)
-    return {
-      data: mockData,
-      message: '获取成功',
-      code: 200
+#### 🆕 多文件自动合并
+```typescript
+// packages/feat-users/mocks/auth.mock.ts - 🆕 可以有多个 .mock.ts 文件
+import { defineMocks, type MockRoute } from '@hema-web-monorepo/mocks'
+
+const routes: MockRoute[] = [
+  {
+    method: 'POST',
+    path: '/api/users/login',
+    handler: async (req, res, ctx) => {
+      // 认证相关的 Mock 逻辑
+      return { data: { token: 'mock-token' }, code: 200 }
     }
   }
-}
+]
 
-export const mockApi = new MockApiService()
+export default defineMocks('feat-users', routes) // 🆕 自动合并到同一个 Feature
 ```
+
+#### API 服务路径配置
+**重要**：避免双重 `/api` 路径问题
+```typescript
+// packages/feat-users/src/api/users.service.ts
+class UsersApiService {
+  // ✅ 正确：不包含 /api 前缀（由 HTTP 客户端统一添加）
+  private readonly baseUrl = '/users'
+  
+  // ❌ 错误：会导致 /api/api/users 的双重路径
+  // private readonly baseUrl = '/api/users'
+}
+```
+
+### 🆕 升级版 Vite 插件集成（支持热更新）
+
+#### 🆕 零配置开发环境
+```typescript
+// apps/web/vite.config.ts
+import { createViteMockPlugin } from '@hema-web-monorepo/mocks'
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    // 🆕 使用升级版插件，支持 TypeScript 热更新
+    createViteMockPlugin({
+      base: '/api',                           // 仅匹配 /api 前缀
+      log: true,                             // 启用请求日志
+      enabled: true,                         // 强制启用
+      globs: [                               // 🆕 只扫描 .mock.ts 文件
+        'packages/feat-*/mocks/**/*.mock.ts',
+        'packages/feat-*/mocks/**/*.mock.js'
+      ],
+      include: ['feat-users'],               // 启用的 Feature
+      // exclude: ['feat-analytics'],        // 排除指定 Feature
+    })
+  ]
+})
+```
+
+#### 🆕 核心技术升级
+- **Vite ssrLoadModule**: 直接加载 TypeScript 文件，无需编译
+- **智能文件监听**: 自动检测 .mock.ts 文件变更并热更新
+- **运行时中间件工厂**: 支持动态路由获取，实现真正的热更新
+- **零配置扫描**: 自动发现 packages/feat-*/mocks/**/*.mock.ts 文件
+
+#### 环境变量控制
+```bash
+# .env.development
+VITE_USE_MOCK=true                    # 启用 Mock 服务
+VITE_MOCK_INCLUDE=feat-users,feat-orders  # 仅启用指定 Feature
+VITE_MOCK_EXCLUDE=feat-analytics      # 排除指定 Feature
+```
+
+### 独立服务器模式
+
+#### 启动独立 Mock 服务
+```bash
+# 构建并启动独立 Mock 服务器
+pnpm nx run mocks:build
+pnpm nx run mocks:serve
+
+# 访问服务
+curl http://localhost:3001/health     # 健康检查
+curl http://localhost:3001/mock-info  # Mock 信息
+curl http://localhost:3001/api/users  # API 调用
+```
+
+#### 服务端点
+- `GET /health` - 健康检查
+- `GET /mock-info` - Mock 配置信息
+- `GET /api/*` - 业务 API 接口
+
+### Mock 开发最佳实践
+
+#### 1. 数据模拟
+- 使用真实的业务数据结构
+- 提供足够的测试数据量
+- 模拟各种边界情况和错误场景
+- 支持搜索、分页、排序等常见功能
+
+#### 2. 响应格式
+- 保持与真实 API 的响应格式一致
+- 包含完整的状态码和错误信息
+- 支持国际化的错误消息
+
+#### 3. 性能考虑
+- 添加适当的延迟模拟网络情况
+- 避免在 Mock 处理函数中执行重计算
+- 大数据集使用分页处理
+
+#### 4. 开发体验
+- 添加详细的日志输出
+- 提供清晰的错误提示
+- 支持热重载和实时更新
 
 ## 🌍 国际化规范
 

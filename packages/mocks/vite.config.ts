@@ -25,6 +25,29 @@ export default defineConfig((): UserConfig => ({
     }
   },
 
+  build: {
+    lib: {
+      entry: path.resolve(__dirname, 'src/index.ts'),
+      name: 'HemaMocks',
+      fileName: 'index',
+      formats: ['es', 'cjs']
+    },
+    rollupOptions: {
+      external: [
+        'vite',
+        'express',
+        'cors',
+        'fast-glob',
+        'node:path',
+        'node:url',
+        'node:querystring',
+        'node:http'
+      ]
+    },
+    outDir: 'dist',
+    emptyOutDir: true
+  },
+
   plugins: [],
   // Uncomment this if you are using workers.
   // worker: {

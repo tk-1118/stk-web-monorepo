@@ -14,10 +14,13 @@
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"],
   "references": [
     {
+      "path": "../api"
+    },
+    {
       "path": "../models"
     },
     {
-      "path": "../api"
+      "path": "../mocks"
     }
   ]
 }

@@ -965,3 +965,259 @@ try {
 ```
 
 通过遵循这些最佳实践，可以确保生成的代码具有高质量、高可靠性和良好的用户体验。
+
+## 🎭 Mock 数据开发规范
+
+### Mock 系统架构
+
+本项目采用"分治 + 汇聚"的混合 Mock 方案，实现了领域内聚与统一管理的完美平衡：
+
+#### 核心理念
+- **领域内聚**：Mock 数据定义在各 Feature 内，就近维护
+- **统一汇聚**：基础能力沉到 packages/mocks，自动汇聚各 Feature 的 Mock
+- **灵活控制**：支持按环境变量选择启/停哪些 Feature 的 Mock
+- **多端共用**：支持 Vite 插件（前端）和独立服务（移动端/后端）
+- **🆕 零汇总文件**：无需 index.ts，直接放 .mock.ts 文件即可
+- **🆕 纯 TS 即插即用**：使用 Vite ssrLoadModule 直接加载 TypeScript 文件
+
+#### 目录结构
+```
+packages/mocks/                     # Mock 系统核心
+├── src/
+│   ├── types.ts                   # 核心类型定义
+│   ├── utils.ts                   # 工具函数
+│   ├── registry.ts                # Mock 汇聚机制（支持 Vite ssrLoadModule）
+│   ├── runtime-middleware.ts      # 运行时中间件工厂
+│   ├── plugin.vite.ts             # Vite 插件（支持热更新）
+│   ├── server.ts                  # 独立服务器
+│   └── index.ts                   # 统一导出
+
+packages/feat-users/                # Feature 示例
+├── mocks/
+│   ├── users.mock.ts              # 🆕 直接放 .mock.ts 文件
+│   ├── roles.mock.ts              # 🆕 可以有多个 .mock.ts 文件
+│   └── permissions.mock.ts        # 🆕 自动扫描和合并
+└── src/...
+```
+
+### Mock 开发规范
+
+#### 🆕 1. 零汇总文件的 Mock 定义
+```typescript
+// packages/feat-users/mocks/users.mock.ts - 🆕 直接放 .mock.ts 文件
+import { defineMocks, type MockRoute } from '@hema-web-monorepo/mocks'
+import { mockUsers } from '../src/mocks/users.mock'
+
+const routes: MockRoute[] = [
+  {
+    method: 'GET',
+    path: '/api/users',
+    handler: async (req, res, ctx) => {
+      console.log('[feat-users] 处理用户列表请求:', ctx.query)
+      
+      // 模拟网络延迟
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      const { page = '1', size = '10', keyword = '' } = ctx.query
+      
+      // 搜索和分页逻辑
+      let filteredUsers = [...mockUsers]
+      if (keyword) {
+        const searchTerm = keyword.toLowerCase()
+        filteredUsers = mockUsers.filter(user =>
+          user.name.toLowerCase().includes(searchTerm) ||
+          user.username.toLowerCase().includes(searchTerm) ||
+          user.email.toLowerCase().includes(searchTerm)
+        )
+      }
+      
+      const pageNum = Number(page)
+      const pageSize = Number(size)
+      const total = filteredUsers.length
+      const startIndex = (pageNum - 1) * pageSize
+      const data = filteredUsers.slice(startIndex, startIndex + pageSize)
+
+      return {
+        data: { data, total, page: pageNum, size: pageSize },
+        message: '获取用户列表成功',
+        code: 200
+      }
+    }
+  },
+  {
+    method: 'GET',
+    path: /^\/api\/users\/(\d+)$/,
+    handler: async (req, res, ctx) => {
+      console.log('[feat-users] 处理用户详情请求:', ctx.params)
+      
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      const id = ctx.params?.[1]
+      if (!id) {
+        return { data: null, message: '用户ID不能为空', code: 400 }
+      }
+
+      const user = mockUsers.find(u => u.id === id)
+      if (!user) {
+        return { data: null, message: '用户不存在', code: 404 }
+      }
+      
+      return { data: user, message: '获取用户详情成功', code: 200 }
+    }
+  }
+]
+
+// 🆕 直接 export default，无需 index.ts 汇总
+export default defineMocks('feat-users', routes)
+```
+
+#### 🆕 2. 多文件自动合并
+```typescript
+// packages/feat-users/mocks/roles.mock.ts - 🆕 可以有多个 .mock.ts 文件
+import { defineMocks, type MockRoute } from '@hema-web-monorepo/mocks'
+
+const routes: MockRoute[] = [
+  {
+    method: 'GET',
+    path: '/api/users/roles',
+    handler: async (req, res, ctx) => {
+      // 角色相关的 Mock 逻辑
+      return { data: mockRoles, code: 200 }
+    }
+  }
+]
+
+export default defineMocks('feat-users', routes) // 🆕 自动合并到同一个 Feature
+```
+
+#### 2. API 服务路径配置
+**重要**：避免双重 `/api` 路径问题
+```typescript
+// packages/feat-users/src/api/users.service.ts
+class UsersApiService {
+  // ✅ 正确：不包含 /api 前缀（由 HTTP 客户端统一添加）
+  private readonly baseUrl = '/users'
+  
+  // ❌ 错误：会导致 /api/api/users 的双重路径
+  // private readonly baseUrl = '/api/users'
+}
+```
+
+#### 🆕 3. 升级版 Vite 插件集成（支持热更新）
+```typescript
+// apps/web/vite.config.ts
+import { createViteMockPlugin } from '@hema-web-monorepo/mocks'
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    // 🆕 使用升级版插件，支持 TypeScript 热更新
+    createViteMockPlugin({
+      base: '/api',                           // 仅匹配 /api 前缀
+      log: true,                             // 启用请求日志
+      enabled: true,                         // 强制启用
+      globs: [                               // 🆕 只扫描 .mock.ts 文件
+        'packages/feat-*/mocks/**/*.mock.ts',
+        'packages/feat-*/mocks/**/*.mock.js'
+      ],
+      include: ['feat-users'],               // 启用的 Feature
+      // exclude: ['feat-analytics'],        // 排除指定 Feature
+    })
+  ]
+})
+```
+
+#### 🆕 4. 核心技术升级
+- **Vite ssrLoadModule**: 直接加载 TypeScript 文件，无需编译
+- **智能文件监听**: 自动检测 .mock.ts 文件变更并热更新
+- **运行时中间件工厂**: 支持动态路由获取，实现真正的热更新
+- **零配置扫描**: 自动发现 packages/feat-*/mocks/**/*.mock.ts 文件
+
+#### 4. 环境变量控制
+```bash
+# .env.development
+VITE_USE_MOCK=true                    # 启用 Mock 服务
+VITE_MOCK_INCLUDE=feat-users,feat-orders  # 仅启用指定 Feature
+VITE_MOCK_EXCLUDE=feat-analytics      # 排除指定 Feature
+```
+
+#### 5. 独立服务器模式
+```bash
+# 构建并启动独立 Mock 服务器
+pnpm nx run mocks:build
+pnpm nx run mocks:serve
+
+# 访问服务
+curl http://localhost:3001/health     # 健康检查
+curl http://localhost:3001/mock-info  # Mock 信息
+curl http://localhost:3001/api/users  # API 调用
+```
+
+### 🆕 Mock 开发最佳实践（升级版）
+
+#### 1. 零汇总文件开发模式
+- **直接创建 .mock.ts 文件**: 无需 index.ts，按功能模块拆分
+- **自动扫描合并**: 同一 Feature 下的多个 .mock.ts 文件自动合并
+- **即插即用**: 创建文件后立即生效，支持热更新
+- **TypeScript 原生支持**: 使用 Vite ssrLoadModule 直接加载 TS 文件
+
+#### 2. 文件组织策略
+```
+packages/feat-users/mocks/
+├── users.mock.ts          # 用户基础 CRUD
+├── auth.mock.ts           # 用户认证相关
+├── profile.mock.ts        # 用户档案管理
+└── permissions.mock.ts    # 权限相关
+```
+
+#### 3. 数据模拟增强
+- **真实业务数据结构**: 与后端 API 保持一致
+- **智能搜索支持**: 支持多字段模糊搜索
+- **完整分页逻辑**: 包含 total、page、size 等分页信息
+- **边界情况处理**: 空数据、错误状态、权限验证等
+- **网络延迟模拟**: 使用 `await new Promise(resolve => setTimeout(resolve, 300))`
+
+#### 4. 响应格式标准化
+```typescript
+// 统一的响应格式
+return {
+  data: result,           // 业务数据
+  message: '操作成功',    // 用户友好的消息
+  code: 200,             // 状态码
+  timestamp: Date.now()   // 时间戳（可选）
+}
+```
+
+#### 5. 开发体验优化
+- **详细日志输出**: `console.log('[feat-users] 处理用户列表请求:', ctx.query)`
+- **热更新支持**: 修改 .mock.ts 文件后自动重新加载
+- **错误提示清晰**: 提供具体的错误信息和解决建议
+- **实时监听**: 文件变更后立即生效，无需重启服务
+
+### 🆕 Mock 系统故障排除（升级版）
+
+#### 常见问题及解决方案
+1. **🆕 .mock.ts 文件不生效**
+   - 检查文件命名是否符合 `*.mock.ts` 格式
+   - 确认文件位置在 `packages/feat-*/mocks/` 目录下
+   - 查看控制台是否有 `[mock-registry] 发现 X 个 Mock 文件` 日志
+
+2. **热更新不工作**
+   - 确认使用的是 `createViteMockPlugin` 而不是旧版插件
+   - 检查 Vite 开发服务器是否正常运行
+   - 查看是否有文件监听相关的错误日志
+
+3. **TypeScript 导入错误**
+   - 🆕 新版本直接支持 TypeScript，无需额外配置
+   - 确保从 `@hema-web-monorepo/mocks` 正确导入类型
+   - 检查相对路径导入是否正确
+
+4. **双重路径问题**
+   - 检查 API 服务的 `baseUrl` 配置
+   - 确保不包含 `/api` 前缀
+   - 验证 Mock 路径定义是否正确
+
+5. **🆕 多文件合并问题**
+   - 确保每个 .mock.ts 文件都有正确的 `export default defineMocks()`
+   - 检查 Feature 名称是否一致
+   - 查看控制台日志确认文件是否被正确加载

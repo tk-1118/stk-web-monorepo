@@ -32,7 +32,7 @@ interface PaginatedResponse<T> {
  * 提供用户 CRUD 操作的 HTTP 接口封装
  */
 class UsersApiService {
-  private readonly baseUrl = '/api/users'
+  private readonly baseUrl = '/users'
 
   /**
    * 获取用户列表
