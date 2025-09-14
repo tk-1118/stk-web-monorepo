@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/packages/feat-{{FEAT_NAME}}",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "types": ["vite/client"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.stories.ts",
+    "**/*.stories.vue",
+    "src/test-setup.ts"
+  ]
+}

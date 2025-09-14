@@ -1,0 +1,20 @@
+import baseConfig from '../../eslint.config.mjs'
+
+/**
+ * {{CHINESE_NAME}}模块 ESLint 配置
+ * 继承项目基础配置，针对 Vue 组件和 TypeScript 进行优化
+ */
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.vue'],
+    rules: {
+      // 针对 feat-{{FEAT_NAME}} 模块的特殊规则
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_'
+      }],
+      'vue/multi-word-component-names': 'off'
+    }
+  }
+]

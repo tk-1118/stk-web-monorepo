@@ -1,0 +1,59 @@
+/**
+ * {{CHINESE_NAME}}领域路由配置
+ * 定义{{CHINESE_NAME}}相关页面的路由规则，支持懒加载和代码分割
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+import type { RouteRecordRaw } from 'vue-router'
+
+/** {{CHINESE_NAME}}路由配置 */
+export const {{FEAT_NAME_CAMEL}}Routes: RouteRecordRaw[] = [
+  {
+    path: '/{{FEAT_NAME}}',
+    name: '{{FEAT_NAME_PASCAL}}Layout',
+    component: () => import('./pages/{{FEAT_NAME_PASCAL}}Layout.vue'),
+    meta: {
+      title: '{{CHINESE_NAME}}',
+      requiresAuth: true
+    },
+    children: [
+      {
+        path: '/list',
+        name: '{{FEAT_NAME_PASCAL}}List',
+        component: () => import('./pages/{{FEAT_NAME_PASCAL}}List.vue'),
+        meta: {
+          title: '{{CHINESE_NAME}}列表',
+          breadcrumb: '{{CHINESE_NAME}}列表'
+        }
+      },
+      {
+        path: ':id',
+        name: '{{FEAT_NAME_PASCAL}}Detail',
+        component: () => import('./pages/{{FEAT_NAME_PASCAL}}Detail.vue'),
+        meta: {
+          title: '{{CHINESE_NAME}}详情',
+          breadcrumb: '{{CHINESE_NAME}}详情'
+        }
+      },
+      {
+        path: 'create',
+        name: '{{FEAT_NAME_PASCAL}}Create',
+        component: () => import('./pages/{{FEAT_NAME_PASCAL}}Create.vue'),
+        meta: {
+          title: '创建{{CHINESE_NAME}}',
+          breadcrumb: '创建{{CHINESE_NAME}}'
+        }
+      },
+      {
+        path: ':id/edit',
+        name: '{{FEAT_NAME_PASCAL}}Edit',
+        component: () => import('./pages/{{FEAT_NAME_PASCAL}}Edit.vue'),
+        meta: {
+          title: '编辑{{CHINESE_NAME}}',
+          breadcrumb: '编辑{{CHINESE_NAME}}'
+        }
+      }
+    ]
+  }
+]

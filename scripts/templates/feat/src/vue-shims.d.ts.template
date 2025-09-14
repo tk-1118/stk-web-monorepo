@@ -1,0 +1,13 @@
+/**
+ * Vue 类型声明文件
+ * 为 {{CHINESE_NAME}} 模块提供 Vue 组件的类型支持
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}

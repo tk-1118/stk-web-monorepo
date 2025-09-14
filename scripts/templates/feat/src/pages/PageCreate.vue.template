@@ -1,0 +1,213 @@
+<template>
+  <div class="{{FEAT_NAME}}-create">
+    <!-- 页面头部 -->
+    <div class="create-header">
+      <div class="header-left">
+        <el-button @click="handleBack">
+          <el-icon><ArrowLeft /></el-icon>
+          返回列表
+        </el-button>
+        <h2>创建{{CHINESE_NAME}}</h2>
+      </div>
+    </div>
+
+    <!-- 创建表单 -->
+    <div class="create-form">
+      <el-card>
+        <el-form
+          ref="formRef"
+          v-loading="{{FEAT_NAME_CAMEL}}Store.actionLoading"
+          :model="formData"
+          :rules="formRules"
+          label-width="120px"
+          size="large"
+        >
+          <el-form-item label="{{CHINESE_NAME}}名称" prop="name">
+            <el-input
+              v-model="formData.name"
+              placeholder="请输入{{CHINESE_NAME}}名称"
+              maxlength="50"
+              show-word-limit
+              clearable
+            />
+          </el-form-item>
+
+          <el-form-item label="状态" prop="status">
+            <el-radio-group v-model="formData.status">
+              <el-radio value="active">活跃</el-radio>
+              <el-radio value="inactive">未激活</el-radio>
+              <el-radio value="pending">待处理</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="描述" prop="description">
+            <el-input
+              v-model="formData.description"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入{{CHINESE_NAME}}描述（可选）"
+              maxlength="200"
+              show-word-limit
+              resize="none"
+            />
+          </el-form-item>
+
+          <el-form-item>
+            <el-button
+              type="primary"
+              :loading="{{FEAT_NAME_CAMEL}}Store.actionLoading"
+              @click="handleSubmit"
+            >
+              <el-icon><Check /></el-icon>
+              创建{{CHINESE_NAME}}
+            </el-button>
+
+            <el-button @click="handleReset">
+              <el-icon><Refresh /></el-icon>
+              重置
+            </el-button>
+
+            <el-button @click="handleBack">
+              取消
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+/**
+ * 创建{{CHINESE_NAME}}页面
+ * 提供{{CHINESE_NAME}}创建表单，包含数据验证和提交功能
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ArrowLeft, Check, Refresh } from '@element-plus/icons-vue'
+import { use{{FEAT_NAME_PASCAL}}Store } from '../store/{{FEAT_NAME}}.store'
+import type { Create{{ENTITY_NAME}}Request } from '../api/{{FEAT_NAME}}.service'
+
+// 路由和状态管理
+const router = useRouter()
+const {{FEAT_NAME_CAMEL}}Store = use{{FEAT_NAME_PASCAL}}Store()
+
+// 表单引用
+const formRef = ref<FormInstance>()
+
+// 表单数据
+const formData = reactive<Create{{ENTITY_NAME}}Request>({
+  name: '',
+  description: '',
+  status: 'active'
+})
+
+// 表单验证规则
+const formRules: FormRules<Create{{ENTITY_NAME}}Request> = {
+  name: [
+    { required: true, message: '请输入{{CHINESE_NAME}}名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '{{CHINESE_NAME}}名称长度应在2-50个字符之间', trigger: 'blur' }
+  ],
+  status: [
+    { required: true, message: '请选择状态', trigger: 'change' }
+  ],
+  description: [
+    { max: 200, message: '描述长度不能超过200个字符', trigger: 'blur' }
+  ]
+}
+
+/**
+ * 处理返回
+ */
+function handleBack() {
+  router.push('/{{FEAT_NAME}}/list')
+}
+
+/**
+ * 处理重置
+ */
+function handleReset() {
+  formRef.value?.resetFields()
+
+  // 手动重置数据（确保完全重置）
+  Object.assign(formData, {
+    name: '',
+    description: '',
+    status: 'active'
+  })
+}
+
+/**
+ * 处理提交
+ */
+async function handleSubmit() {
+  if (!formRef.value) return
+
+  try {
+    // 验证表单
+    const valid = await formRef.value.validate()
+    if (!valid) return
+
+    // 提交数据
+    const new{{ENTITY_NAME}} = await {{FEAT_NAME_CAMEL}}Store.create{{ENTITY_NAME}}(formData)
+
+    ElMessage.success('{{CHINESE_NAME}}创建成功')
+
+    // 跳转到详情页
+    router.push(`/{{FEAT_NAME}}/${new{{ENTITY_NAME}}.id}`)
+
+  } catch (error) {
+    console.error('创建{{CHINESE_NAME}}失败:', error)
+    ElMessage.error('创建{{CHINESE_NAME}}失败，请重试')
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.{{FEAT_NAME}}-create {
+  .create-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+  }
+
+  .create-form {
+    .el-card {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .el-form {
+      max-width: 600px;
+
+      .el-form-item:last-child {
+        margin-top: 32px;
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+</style>

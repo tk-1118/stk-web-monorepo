@@ -1,0 +1,90 @@
+/**
+ * {{CHINESE_NAME}}领域特性包主入口文件
+ * 统一导出路由、组件、状态管理和工具函数
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+// 导出路由配置
+export { {{FEAT_NAME_CAMEL}}Routes as routes } from './routes'
+
+// 导出状态管理
+export { use{{FEAT_NAME_PASCAL}}Store } from './store/{{FEAT_NAME}}.store'
+
+// 导出 API 服务 (仅在启用 API 时)
+// export { {{FEAT_NAME_CAMEL}}Api } from './api/{{FEAT_NAME}}.service'
+
+// 导出组件
+// export { default as {{ENTITY_NAME}}Card } from './components/{{ENTITY_NAME}}Card.vue'
+
+// 导出国际化配置
+export { zh{{FEAT_NAME_PASCAL}} } from './i18n/zh'
+export { en{{FEAT_NAME_PASCAL}} } from './i18n/en'
+
+// 导出 Mock 数据（开发环境使用）
+export {
+  mock{{FEAT_NAME_PASCAL}},
+  mock{{ENTITY_NAME}}Activities,
+  mock{{FEAT_NAME_PASCAL}}Api
+} from './mocks/{{FEAT_NAME}}.mock'
+
+// 导出类型定义
+// export type { Props as {{ENTITY_NAME}}CardProps } from './components/{{ENTITY_NAME}}Card.vue'
+
+/**
+ * {{CHINESE_NAME}}模块安装器
+ * 提供统一的模块安装和配置方法
+ */
+import type { Router } from 'vue-router'
+import type { App } from 'vue'
+import { {{FEAT_NAME_CAMEL}}Routes } from './routes'
+
+/** 安装选项接口 */
+export interface InstallOptions {
+  /** 是否启用 Mock 数据 */
+  enableMock?: boolean
+  /** 路由前缀 */
+  routePrefix?: string
+  /** 国际化语言 */
+  locale?: 'zh' | 'en'
+}
+
+/**
+ * 安装{{CHINESE_NAME}}模块
+ * @param app Vue 应用实例
+ * @param router 路由实例
+ * @param options 安装选项
+ */
+export function install(app: App, router: Router, options: InstallOptions = {}) {
+  const { enableMock = false, routePrefix = '', locale = 'zh' } = options
+
+  // 注册路由
+  {{FEAT_NAME_CAMEL}}Routes.forEach(route => {
+    // 如果设置了路由前缀，则添加前缀
+    if (routePrefix) {
+      route.path = `${routePrefix}${route.path}`
+    }
+    router.addRoute(route)
+  })
+
+  // 如果启用 Mock 数据，则配置 Mock 拦截器
+  if (enableMock && typeof window !== 'undefined') {
+    console.log('[feat-{{FEAT_NAME}}] Mock 数据已启用')
+    // 这里可以配置 Mock.js 或其他 Mock 工具
+  }
+
+  // 配置国际化
+  if (locale) {
+    console.log(`[feat-{{FEAT_NAME}}] 国际化语言设置为: ${locale}`)
+  }
+
+  console.log('[feat-{{FEAT_NAME}}] {{CHINESE_NAME}}模块安装完成')
+}
+
+/**
+ * 默认导出安装器
+ */
+export default {
+  install
+}

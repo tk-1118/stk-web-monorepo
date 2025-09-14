@@ -1,0 +1,308 @@
+<template>
+  <div class="{{FEAT_NAME}}-edit">
+    <div v-loading="{{FEAT_NAME_CAMEL}}Store.detailLoading" class="edit-container">
+      <!-- 页面头部 -->
+      <div class="edit-header">
+        <div class="header-left">
+          <el-button @click="handleBack">
+            <el-icon><ArrowLeft /></el-icon>
+            返回详情
+          </el-button>
+          <h2>编辑{{CHINESE_NAME}}</h2>
+        </div>
+      </div>
+
+      <!-- 编辑表单 -->
+      <div v-if="{{ENTITY_NAME_LOWER}}" class="edit-form">
+        <el-card>
+          <el-form
+            ref="formRef"
+            v-loading="{{FEAT_NAME_CAMEL}}Store.actionLoading"
+            :model="formData"
+            :rules="formRules"
+            label-width="120px"
+            size="large"
+          >
+            <el-form-item label="{{CHINESE_NAME}}名称" prop="name">
+              <el-input
+                v-model="formData.name"
+                placeholder="请输入{{CHINESE_NAME}}名称"
+                maxlength="50"
+                show-word-limit
+                clearable
+              />
+            </el-form-item>
+
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="formData.status">
+                <el-radio value="active">活跃</el-radio>
+                <el-radio value="inactive">未激活</el-radio>
+                <el-radio value="pending">待处理</el-radio>
+              </el-radio-group>
+            </el-form-item>
+
+            <el-form-item label="描述" prop="description">
+              <el-input
+                v-model="formData.description"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入{{CHINESE_NAME}}描述（可选）"
+                maxlength="200"
+                show-word-limit
+                resize="none"
+              />
+            </el-form-item>
+
+            <el-form-item>
+              <el-button
+                type="primary"
+                :loading="{{FEAT_NAME_CAMEL}}Store.actionLoading"
+                @click="handleSubmit"
+              >
+                <el-icon><Check /></el-icon>
+                保存更改
+              </el-button>
+
+              <el-button @click="handleReset">
+                <el-icon><Refresh /></el-icon>
+                重置
+              </el-button>
+
+              <el-button @click="handleBack">
+                取消
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </div>
+
+      <!-- 数据不存在 -->
+      <div v-else-if="!{{FEAT_NAME_CAMEL}}Store.detailLoading" class="not-found">
+        <el-empty
+          description="{{CHINESE_NAME}}不存在或已被删除"
+          :image-size="200"
+        >
+          <el-button type="primary" @click="handleBackToList">
+            返回列表
+          </el-button>
+        </el-empty>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+/**
+ * 编辑{{CHINESE_NAME}}页面
+ * 提供{{CHINESE_NAME}}编辑表单，包含数据验证和更新功能
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ArrowLeft, Check, Refresh } from '@element-plus/icons-vue'
+import { use{{FEAT_NAME_PASCAL}}Store } from '../store/{{FEAT_NAME}}.store'
+import type { Update{{ENTITY_NAME}}Request } from '../api/{{FEAT_NAME}}.service'
+
+// 路由和状态管理
+const route = useRoute()
+const router = useRouter()
+const {{FEAT_NAME_CAMEL}}Store = use{{FEAT_NAME_PASCAL}}Store()
+
+// 表单引用
+const formRef = ref<FormInstance>()
+
+// 当前{{CHINESE_NAME}}ID
+const {{ENTITY_NAME_LOWER}}Id = computed(() => route.params.id as string)
+
+// 当前{{CHINESE_NAME}}数据
+const {{ENTITY_NAME_LOWER}} = computed(() => {{FEAT_NAME_CAMEL}}Store.current{{ENTITY_NAME}})
+
+// 表单数据
+const formData = reactive<Omit<Update{{ENTITY_NAME}}Request, 'id'>>({
+  name: '',
+  description: '',
+  status: 'active'
+})
+
+// 表单验证规则
+const formRules: FormRules<Omit<Update{{ENTITY_NAME}}Request, 'id'>> = {
+  name: [
+    { required: true, message: '请输入{{CHINESE_NAME}}名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '{{CHINESE_NAME}}名称长度应在2-50个字符之间', trigger: 'blur' }
+  ],
+  status: [
+    { required: true, message: '请选择状态', trigger: 'change' }
+  ],
+  description: [
+    { max: 200, message: '描述长度不能超过200个字符', trigger: 'blur' }
+  ]
+}
+
+/**
+ * 监听{{CHINESE_NAME}}数据变化，更新表单
+ */
+watch(
+  () => {{ENTITY_NAME_LOWER}}.value,
+  (new{{ENTITY_NAME}}) => {
+    if (new{{ENTITY_NAME}}) {
+      Object.assign(formData, {
+        name: new{{ENTITY_NAME}}.name,
+        description: new{{ENTITY_NAME}}.description || '',
+        status: new{{ENTITY_NAME}}.status
+      })
+    }
+  },
+  { immediate: true }
+)
+
+/**
+ * 处理返回详情页
+ */
+function handleBack() {
+  router.push(`/{{FEAT_NAME}}/${{{ENTITY_NAME_LOWER}}Id.value}`)
+}
+
+/**
+ * 处理返回列表页
+ */
+function handleBackToList() {
+  router.push('/{{FEAT_NAME}}/list')
+}
+
+/**
+ * 处理重置
+ */
+function handleReset() {
+  if ({{ENTITY_NAME_LOWER}}.value) {
+    Object.assign(formData, {
+      name: {{ENTITY_NAME_LOWER}}.value.name,
+      description: {{ENTITY_NAME_LOWER}}.value.description || '',
+      status: {{ENTITY_NAME_LOWER}}.value.status
+    })
+
+    // 清除验证状态
+    formRef.value?.clearValidate()
+  }
+}
+
+/**
+ * 处理提交
+ */
+async function handleSubmit() {
+  if (!formRef.value || !{{ENTITY_NAME_LOWER}}.value) return
+
+  try {
+    // 验证表单
+    const valid = await formRef.value.validate()
+    if (!valid) return
+
+    // 检查是否有更改
+    const hasChanges =
+      formData.name !== {{ENTITY_NAME_LOWER}}.value.name ||
+      formData.description !== ({{ENTITY_NAME_LOWER}}.value.description || '') ||
+      formData.status !== {{ENTITY_NAME_LOWER}}.value.status
+
+    if (!hasChanges) {
+      ElMessage.info('没有检测到更改')
+      return
+    }
+
+    // 提交数据
+    const updateData: Update{{ENTITY_NAME}}Request = {
+      id: {{ENTITY_NAME_LOWER}}.value.id,
+      ...formData
+    }
+
+    await {{FEAT_NAME_CAMEL}}Store.update{{ENTITY_NAME}}(updateData)
+
+    ElMessage.success('{{CHINESE_NAME}}更新成功')
+
+    // 跳转到详情页
+    handleBack()
+
+  } catch (error) {
+    console.error('更新{{CHINESE_NAME}}失败:', error)
+    ElMessage.error('更新{{CHINESE_NAME}}失败，请重试')
+  }
+}
+
+/**
+ * 加载{{CHINESE_NAME}}详情
+ */
+async function load{{ENTITY_NAME}}Detail() {
+  try {
+    await {{FEAT_NAME_CAMEL}}Store.fetch{{ENTITY_NAME}}Detail({{ENTITY_NAME_LOWER}}Id.value)
+  } catch (error) {
+    ElMessage.error('加载{{CHINESE_NAME}}详情失败')
+  }
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  if ({{ENTITY_NAME_LOWER}}Id.value) {
+    load{{ENTITY_NAME}}Detail()
+  }
+})
+</script>
+
+<style scoped lang="scss">
+.{{FEAT_NAME}}-edit {
+  .edit-container {
+    min-height: 400px;
+  }
+
+  .edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+  }
+
+  .edit-form {
+    .el-card {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .el-form {
+      max-width: 600px;
+
+      .el-form-item:last-child {
+        margin-top: 32px;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+</style>

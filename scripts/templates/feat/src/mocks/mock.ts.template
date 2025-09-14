@@ -1,0 +1,368 @@
+/**
+ * {{CHINESE_NAME}} Mock 数据
+ * 提供开发和测试环境使用的模拟数据
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+import type { {{ENTITY_NAME}}, {{FEAT_NAME_PASCAL}}ListResponse } from '../api/{{FEAT_NAME}}.service'
+
+/**
+ * 生成随机 ID
+ */
+function generateId(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+}
+
+/**
+ * 生成随机日期
+ */
+function generateRandomDate(start: Date = new Date(2023, 0, 1), end: Date = new Date()): string {
+  const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
+  return date.toISOString()
+}
+
+/**
+ * 生成随机状态
+ */
+function generateRandomStatus(): {{ENTITY_NAME}}['status'] {
+  const statuses: {{ENTITY_NAME}}['status'][] = ['active', 'inactive', 'pending']
+  return statuses[Math.floor(Math.random() * statuses.length)]
+}
+
+/**
+ * 模拟{{CHINESE_NAME}}数据生成器
+ */
+class {{FEAT_NAME_PASCAL}}MockGenerator {
+  private static instance: {{FEAT_NAME_PASCAL}}MockGenerator
+  private {{FEAT_NAME_CAMEL}}Data: {{ENTITY_NAME}}[] = []
+
+  private constructor() {
+    this.init{{FEAT_NAME_PASCAL}}Data()
+  }
+
+  /**
+   * 获取单例实例
+   */
+  static getInstance(): {{FEAT_NAME_PASCAL}}MockGenerator {
+    if (!{{FEAT_NAME_PASCAL}}MockGenerator.instance) {
+      {{FEAT_NAME_PASCAL}}MockGenerator.instance = new {{FEAT_NAME_PASCAL}}MockGenerator()
+    }
+    return {{FEAT_NAME_PASCAL}}MockGenerator.instance
+  }
+
+  /**
+   * 初始化{{CHINESE_NAME}}数据
+   */
+  private init{{FEAT_NAME_PASCAL}}Data() {
+    const sampleNames = [
+      '示例{{CHINESE_NAME}}1',
+      '示例{{CHINESE_NAME}}2',
+      '测试{{CHINESE_NAME}}A',
+      '测试{{CHINESE_NAME}}B',
+      '演示{{CHINESE_NAME}}X',
+      '演示{{CHINESE_NAME}}Y',
+      '开发{{CHINESE_NAME}}Alpha',
+      '开发{{CHINESE_NAME}}Beta',
+      '生产{{CHINESE_NAME}}Gamma',
+      '生产{{CHINESE_NAME}}Delta'
+    ]
+
+    const sampleDescriptions = [
+      '这是一个示例{{CHINESE_NAME}}的描述信息',
+      '用于演示和测试的{{CHINESE_NAME}}',
+      '包含基本功能的{{CHINESE_NAME}}实例',
+      '具有完整配置的{{CHINESE_NAME}}',
+      '支持高级特性的{{CHINESE_NAME}}',
+      '优化性能的{{CHINESE_NAME}}版本',
+      '面向企业用户的{{CHINESE_NAME}}',
+      '轻量级{{CHINESE_NAME}}解决方案',
+      '可扩展的{{CHINESE_NAME}}架构',
+      '安全增强的{{CHINESE_NAME}}实现'
+    ]
+
+    this.{{FEAT_NAME_CAMEL}}Data = Array.from({ length: 50 }, (_, index) => {
+      const createdAt = generateRandomDate()
+      return {
+        id: generateId(),
+        name: sampleNames[index % sampleNames.length] + ` (${index + 1})`,
+        description: sampleDescriptions[index % sampleDescriptions.length],
+        status: generateRandomStatus(),
+        createdAt,
+        updatedAt: generateRandomDate(new Date(createdAt))
+      }
+    })
+  }
+
+  /**
+   * 获取{{CHINESE_NAME}}列表（支持分页和筛选）
+   */
+  getList(params: {
+    page?: number
+    pageSize?: number
+    keyword?: string
+    status?: string
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+  } = {}): {{FEAT_NAME_PASCAL}}ListResponse {
+    const {
+      page = 1,
+      pageSize = 20,
+      keyword = '',
+      status = '',
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = params
+
+    let filteredData = [...this.{{FEAT_NAME_CAMEL}}Data]
+
+    // 关键词搜索
+    if (keyword) {
+      filteredData = filteredData.filter(item =>
+        item.name.toLowerCase().includes(keyword.toLowerCase()) ||
+        (item.description && item.description.toLowerCase().includes(keyword.toLowerCase()))
+      )
+    }
+
+    // 状态筛选
+    if (status) {
+      filteredData = filteredData.filter(item => item.status === status)
+    }
+
+    // 排序
+    filteredData.sort((a, b) => {
+      const aValue = a[sortBy as keyof {{ENTITY_NAME}}] as string
+      const bValue = b[sortBy as keyof {{ENTITY_NAME}}] as string
+
+      if (sortOrder === 'asc') {
+        return aValue.localeCompare(bValue)
+      } else {
+        return bValue.localeCompare(aValue)
+      }
+    })
+
+    // 分页
+    const total = filteredData.length
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const items = filteredData.slice(startIndex, endIndex)
+
+    return {
+      items,
+      total,
+      page,
+      pageSize
+    }
+  }
+
+  /**
+   * 根据 ID 获取{{CHINESE_NAME}}
+   */
+  getById(id: string): {{ENTITY_NAME}} | null {
+    return this.{{FEAT_NAME_CAMEL}}Data.find(item => item.id === id) || null
+  }
+
+  /**
+   * 创建{{CHINESE_NAME}}
+   */
+  create(data: Omit<{{ENTITY_NAME}}, 'id' | 'createdAt' | 'updatedAt'>): {{ENTITY_NAME}} {
+    const now = new Date().toISOString()
+    const new{{ENTITY_NAME}}: {{ENTITY_NAME}} = {
+      id: generateId(),
+      ...data,
+      createdAt: now,
+      updatedAt: now
+    }
+
+    this.{{FEAT_NAME_CAMEL}}Data.unshift(new{{ENTITY_NAME}})
+    return new{{ENTITY_NAME}}
+  }
+
+  /**
+   * 更新{{CHINESE_NAME}}
+   */
+  update(id: string, data: Partial<Omit<{{ENTITY_NAME}}, 'id' | 'createdAt' | 'updatedAt'>>): {{ENTITY_NAME}} | null {
+    const index = this.{{FEAT_NAME_CAMEL}}Data.findIndex(item => item.id === id)
+    if (index === -1) return null
+
+    const updated{{ENTITY_NAME}} = {
+      ...this.{{FEAT_NAME_CAMEL}}Data[index],
+      ...data,
+      updatedAt: new Date().toISOString()
+    }
+
+    this.{{FEAT_NAME_CAMEL}}Data[index] = updated{{ENTITY_NAME}}
+    return updated{{ENTITY_NAME}}
+  }
+
+  /**
+   * 删除{{CHINESE_NAME}}
+   */
+  delete(id: string): boolean {
+    const index = this.{{FEAT_NAME_CAMEL}}Data.findIndex(item => item.id === id)
+    if (index === -1) return false
+
+    this.{{FEAT_NAME_CAMEL}}Data.splice(index, 1)
+    return true
+  }
+
+  /**
+   * 批量删除{{CHINESE_NAME}}
+   */
+  batchDelete(ids: string[]): boolean {
+    const initialLength = this.{{FEAT_NAME_CAMEL}}Data.length
+    this.{{FEAT_NAME_CAMEL}}Data = this.{{FEAT_NAME_CAMEL}}Data.filter(item => !ids.includes(item.id))
+    return this.{{FEAT_NAME_CAMEL}}Data.length < initialLength
+  }
+
+  /**
+   * 更新{{CHINESE_NAME}}状态
+   */
+  updateStatus(id: string, status: {{ENTITY_NAME}}['status']): {{ENTITY_NAME}} | null {
+    return this.update(id, { status })
+  }
+}
+
+// 创建全局实例
+const mockGenerator = {{FEAT_NAME_PASCAL}}MockGenerator.getInstance()
+
+/**
+ * 导出的 Mock 数据
+ */
+export const mock{{FEAT_NAME_PASCAL}} = mockGenerator.getList().items
+
+/**
+ * 导出{{ENTITY_NAME}}活动数据（用于时间线等组件）
+ */
+export const mock{{ENTITY_NAME}}Activities = [
+  {
+    id: '1',
+    type: 'create',
+    title: '创建了{{CHINESE_NAME}}',
+    description: '新建了一个{{CHINESE_NAME}}实例',
+    timestamp: generateRandomDate(),
+    {{ENTITY_NAME_LOWER}}Id: mock{{FEAT_NAME_PASCAL}}[0]?.id
+  },
+  {
+    id: '2',
+    type: 'update',
+    title: '更新了{{CHINESE_NAME}}信息',
+    description: '修改了{{CHINESE_NAME}}的基本信息',
+    timestamp: generateRandomDate(),
+    {{ENTITY_NAME_LOWER}}Id: mock{{FEAT_NAME_PASCAL}}[0]?.id
+  },
+  {
+    id: '3',
+    type: 'status',
+    title: '更改了{{CHINESE_NAME}}状态',
+    description: '将{{CHINESE_NAME}}状态设置为活跃',
+    timestamp: generateRandomDate(),
+    {{ENTITY_NAME_LOWER}}Id: mock{{FEAT_NAME_PASCAL}}[1]?.id
+  }
+]
+
+/**
+ * Mock API 接口实现
+ * 模拟真实 API 的行为，包括延迟和错误处理
+ */
+export const mock{{FEAT_NAME_PASCAL}}Api = {
+  /**
+   * 模拟网络延迟
+   */
+  async delay(ms: number = 300): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  },
+
+  /**
+   * 模拟随机错误
+   */
+  randomError(probability: number = 0.1): void {
+    if (Math.random() < probability) {
+      throw new Error('模拟网络错误')
+    }
+  },
+
+  /**
+   * 获取{{CHINESE_NAME}}列表
+   */
+  async getList(params: Parameters<typeof mockGenerator.getList>[0] = {}) {
+    await this.delay()
+    this.randomError(0.05) // 5% 概率出错
+    return mockGenerator.getList(params)
+  },
+
+  /**
+   * 获取{{CHINESE_NAME}}详情
+   */
+  async getById(id: string) {
+    await this.delay()
+    this.randomError(0.05)
+    const {{ENTITY_NAME_LOWER}} = mockGenerator.getById(id)
+    if (!{{ENTITY_NAME_LOWER}}) {
+      throw new Error('{{CHINESE_NAME}}不存在')
+    }
+    return {{ENTITY_NAME_LOWER}}
+  },
+
+  /**
+   * 创建{{CHINESE_NAME}}
+   */
+  async create(data: Parameters<typeof mockGenerator.create>[0]) {
+    await this.delay(500) // 创建操作稍慢
+    this.randomError(0.1) // 10% 概率出错
+    return mockGenerator.create(data)
+  },
+
+  /**
+   * 更新{{CHINESE_NAME}}
+   */
+  async update(id: string, data: Parameters<typeof mockGenerator.update>[1]) {
+    await this.delay(400)
+    this.randomError(0.1)
+    const result = mockGenerator.update(id, data)
+    if (!result) {
+      throw new Error('{{CHINESE_NAME}}不存在')
+    }
+    return result
+  },
+
+  /**
+   * 删除{{CHINESE_NAME}}
+   */
+  async delete(id: string) {
+    await this.delay(300)
+    this.randomError(0.1)
+    const success = mockGenerator.delete(id)
+    if (!success) {
+      throw new Error('{{CHINESE_NAME}}不存在')
+    }
+  },
+
+  /**
+   * 批量删除{{CHINESE_NAME}}
+   */
+  async batchDelete(ids: string[]) {
+    await this.delay(600) // 批量操作更慢
+    this.randomError(0.15) // 15% 概率出错
+    return mockGenerator.batchDelete(ids)
+  },
+
+  /**
+   * 更新{{CHINESE_NAME}}状态
+   */
+  async updateStatus(id: string, status: {{ENTITY_NAME}}['status']) {
+    await this.delay(200)
+    this.randomError(0.05)
+    const result = mockGenerator.updateStatus(id, status)
+    if (!result) {
+      throw new Error('{{CHINESE_NAME}}不存在')
+    }
+    return result
+  }
+}
+
+/**
+ * 导出类型定义
+ */
+export type { {{ENTITY_NAME}} } from '../api/{{FEAT_NAME}}.service'

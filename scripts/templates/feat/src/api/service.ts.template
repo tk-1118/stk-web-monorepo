@@ -1,0 +1,165 @@
+/**
+ * {{CHINESE_NAME}} API 服务
+ * 提供{{CHINESE_NAME}}相关的数据接口和业务逻辑
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+import { http } from '@hema-web-monorepo/api'
+
+/**
+ * {{ENTITY_NAME}} 实体接口定义
+ */
+export interface {{ENTITY_NAME}} {
+  /** {{ENTITY_NAME}} ID */
+  id: string
+  /** {{ENTITY_NAME}} 名称 */
+  name: string
+  /** 描述信息 */
+  description?: string
+  /** 状态 */
+  status: 'active' | 'inactive' | 'pending'
+  /** 创建时间 */
+  createdAt: string
+  /** 更新时间 */
+  updatedAt: string
+}
+
+/**
+ * 创建{{ENTITY_NAME}}的请求参数
+ */
+export interface Create{{ENTITY_NAME}}Request {
+  /** {{ENTITY_NAME}} 名称 */
+  name: string
+  /** 描述信息 */
+  description?: string
+  /** 状态 */
+  status?: 'active' | 'inactive' | 'pending'
+}
+
+/**
+ * 更新{{ENTITY_NAME}}的请求参数
+ */
+export interface Update{{ENTITY_NAME}}Request extends Partial<Create{{ENTITY_NAME}}Request> {
+  /** {{ENTITY_NAME}} ID */
+  id: string
+}
+
+/**
+ * 查询{{ENTITY_NAME}}列表的请求参数
+ */
+export interface Query{{FEAT_NAME_PASCAL}}Request {
+  /** 页码 */
+  page?: number
+  /** 每页数量 */
+  pageSize?: number
+  /** 搜索关键词 */
+  keyword?: string
+  /** 状态筛选 */
+  status?: string
+  /** 排序字段 */
+  sortBy?: string
+  /** 排序方向 */
+  sortOrder?: 'asc' | 'desc'
+}
+
+/**
+ * {{ENTITY_NAME}}列表响应数据
+ */
+export interface {{FEAT_NAME_PASCAL}}ListResponse {
+  /** {{ENTITY_NAME}}列表 */
+  items: {{ENTITY_NAME}}[]
+  /** 总数量 */
+  total: number
+  /** 当前页码 */
+  page: number
+  /** 每页数量 */
+  pageSize: number
+}
+
+/**
+ * {{CHINESE_NAME}} API 服务类
+ * 封装所有与{{CHINESE_NAME}}相关的 HTTP 请求
+ */
+class {{FEAT_NAME_PASCAL}}ApiService {
+  private readonly baseUrl = '/api/{{FEAT_NAME}}'
+
+  /**
+   * 获取{{CHINESE_NAME}}列表
+   * @param params 查询参数
+   * @returns {{CHINESE_NAME}}列表数据
+   */
+  async getList(params: Query{{FEAT_NAME_PASCAL}}Request = {}): Promise<{{FEAT_NAME_PASCAL}}ListResponse> {
+    const response = await http.get<{{FEAT_NAME_PASCAL}}ListResponse>(this.baseUrl, { params })
+    return response.data
+  }
+
+  /**
+   * 根据 ID 获取{{CHINESE_NAME}}详情
+   * @param id {{ENTITY_NAME}} ID
+   * @returns {{CHINESE_NAME}}详情数据
+   */
+  async getById(id: string): Promise<{{ENTITY_NAME}}> {
+    const response = await http.get<{{ENTITY_NAME}}>(`${this.baseUrl}/${id}`)
+    return response.data
+  }
+
+  /**
+   * 创建新的{{CHINESE_NAME}}
+   * @param data 创建{{CHINESE_NAME}}的数据
+   * @returns 创建成功的{{CHINESE_NAME}}数据
+   */
+  async create(data: Create{{ENTITY_NAME}}Request): Promise<{{ENTITY_NAME}}> {
+    const response = await http.post<{{ENTITY_NAME}}>(this.baseUrl, data)
+    return response.data
+  }
+
+  /**
+   * 更新{{CHINESE_NAME}}信息
+   * @param data 更新{{CHINESE_NAME}}的数据
+   * @returns 更新成功的{{CHINESE_NAME}}数据
+   */
+  async update(data: Update{{ENTITY_NAME}}Request): Promise<{{ENTITY_NAME}}> {
+    const { id, ...updateData } = data
+    const response = await http.put<{{ENTITY_NAME}}>(`${this.baseUrl}/${id}`, updateData)
+    return response.data
+  }
+
+  /**
+   * 删除{{CHINESE_NAME}}
+   * @param id {{ENTITY_NAME}} ID
+   * @returns 删除操作结果
+   */
+  async delete(id: string): Promise<void> {
+    await http.delete(`${this.baseUrl}/${id}`)
+  }
+
+  /**
+   * 批量删除{{CHINESE_NAME}}
+   * @param ids {{ENTITY_NAME}} ID 数组
+   * @returns 批量删除操作结果
+   */
+  async batchDelete(ids: string[]): Promise<void> {
+    await http.post(`${this.baseUrl}/batch-delete`, { ids })
+  }
+
+  /**
+   * 更新{{CHINESE_NAME}}状态
+   * @param id {{ENTITY_NAME}} ID
+   * @param status 新状态
+   * @returns 更新成功的{{CHINESE_NAME}}数据
+   */
+  async updateStatus(id: string, status: {{ENTITY_NAME}}['status']): Promise<{{ENTITY_NAME}}> {
+    const response = await http.patch<{{ENTITY_NAME}}>(`${this.baseUrl}/${id}/status`, { status })
+    return response.data
+  }
+}
+
+/**
+ * {{CHINESE_NAME}} API 服务实例
+ * 提供全局统一的 API 调用接口
+ */
+export const {{FEAT_NAME_CAMEL}}Api = new {{FEAT_NAME_PASCAL}}ApiService()
+
+// 类型定义已在上面导出，无需重复导出

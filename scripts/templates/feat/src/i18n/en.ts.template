@@ -1,0 +1,145 @@
+/**
+ * {{CHINESE_NAME}} Module English Internationalization Configuration
+ * Defines all English text content for multi-language support
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+/**
+ * {{CHINESE_NAME}} Module English Language Pack
+ */
+export const en{{FEAT_NAME_PASCAL}} = {
+  // ==================== Common Text ====================
+  common: {
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    save: 'Save',
+    delete: 'Delete',
+    edit: 'Edit',
+    create: 'Create',
+    search: 'Search',
+    reset: 'Reset',
+    submit: 'Submit',
+    back: 'Back',
+    loading: 'Loading...',
+    noData: 'No Data',
+    operation: 'Operation',
+    status: 'Status',
+    createdAt: 'Created At',
+    updatedAt: 'Updated At'
+  },
+
+  // ==================== {{ENTITY_NAME}} Related ====================
+  {{FEAT_NAME_CAMEL}}: {
+    // Basic Names
+    title: '{{ENTITY_NAME}}',
+    name: '{{ENTITY_NAME}} Name',
+    description: 'Description',
+
+    // Page Titles
+    list: '{{ENTITY_NAME}} List',
+    detail: '{{ENTITY_NAME}} Detail',
+    create: 'Create {{ENTITY_NAME}}',
+    edit: 'Edit {{ENTITY_NAME}}',
+
+    // Status
+    status: {
+      active: 'Active',
+      inactive: 'Inactive',
+      pending: 'Pending'
+    },
+
+    // Actions
+    actions: {
+      view: 'View {{ENTITY_NAME}}',
+      create: 'Create {{ENTITY_NAME}}',
+      edit: 'Edit {{ENTITY_NAME}}',
+      delete: 'Delete {{ENTITY_NAME}}',
+      batchDelete: 'Batch Delete',
+      activate: 'Activate',
+      deactivate: 'Deactivate'
+    },
+
+    // Form
+    form: {
+      nameRequired: 'Please enter {{ENTITY_NAME}} name',
+      nameLength: '{{ENTITY_NAME}} name should be 2-50 characters long',
+      descriptionLength: 'Description cannot exceed 200 characters',
+      statusRequired: 'Please select status'
+    },
+
+    // Messages
+    messages: {
+      createSuccess: '{{ENTITY_NAME}} created successfully',
+      updateSuccess: '{{ENTITY_NAME}} updated successfully',
+      deleteSuccess: '{{ENTITY_NAME}} deleted successfully',
+      batchDeleteSuccess: 'Batch delete completed successfully',
+      statusUpdateSuccess: 'Status updated successfully',
+
+      createFailed: 'Failed to create {{ENTITY_NAME}}',
+      updateFailed: 'Failed to update {{ENTITY_NAME}}',
+      deleteFailed: 'Failed to delete {{ENTITY_NAME}}',
+      batchDeleteFailed: 'Batch delete failed',
+      statusUpdateFailed: 'Failed to update status',
+
+      confirmDelete: 'Are you sure you want to delete this {{ENTITY_NAME}}?',
+      confirmBatchDelete: 'Are you sure you want to delete selected {{ENTITY_NAME}}s?',
+      confirmStatusChange: 'Are you sure you want to change {{ENTITY_NAME}} status?',
+
+      noSelection: 'Please select {{ENTITY_NAME}}s to operate',
+      loadFailed: 'Failed to load {{ENTITY_NAME}} data'
+    },
+
+    // Search and Filter
+    search: {
+      placeholder: 'Enter {{ENTITY_NAME}} name or description',
+      statusFilter: 'Status Filter',
+      allStatus: 'All Status',
+      dateRange: 'Date Range',
+      advancedSearch: 'Advanced Search'
+    },
+
+    // List Page
+    listPage: {
+      total: 'Total {count} records',
+      selected: '{count} items selected',
+      empty: 'No {{ENTITY_NAME}} data',
+      loadMore: 'Load More'
+    },
+
+    // Detail Page
+    detailPage: {
+      basicInfo: 'Basic Information',
+      extendedInfo: 'Extended Information',
+      operationLog: 'Operation Log',
+      relatedData: 'Related Data'
+    }
+  },
+
+  // ==================== Error Messages ====================
+  errors: {
+    networkError: 'Network connection error, please check network settings',
+    serverError: 'Server error, please try again later',
+    unauthorized: 'Unauthorized access, please login again',
+    forbidden: 'Insufficient permissions to perform this operation',
+    notFound: 'The requested {{ENTITY_NAME}} does not exist',
+    validationError: 'Data validation failed, please check input',
+    unknownError: 'Unknown error, please contact administrator'
+  },
+
+  // ==================== Navigation and Breadcrumb ====================
+  navigation: {
+    home: 'Home',
+    {{FEAT_NAME_CAMEL}}Management: '{{ENTITY_NAME}} Management',
+    {{FEAT_NAME_CAMEL}}List: '{{ENTITY_NAME}} List',
+    {{FEAT_NAME_CAMEL}}Detail: '{{ENTITY_NAME}} Detail',
+    create{{FEAT_NAME_PASCAL}}: 'Create {{ENTITY_NAME}}',
+    edit{{FEAT_NAME_PASCAL}}: 'Edit {{ENTITY_NAME}}'
+  }
+}
+
+/**
+ * Default export English language pack
+ */
+export default en{{FEAT_NAME_PASCAL}}

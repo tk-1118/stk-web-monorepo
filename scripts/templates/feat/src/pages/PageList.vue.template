@@ -1,0 +1,453 @@
+<template>
+  <div class="{{FEAT_NAME}}-list">
+    <!-- 搜索和操作栏 -->
+    <div class="list-toolbar">
+      <div class="search-section">
+        <el-input
+          v-model="searchForm.keyword"
+          placeholder="请输入{{CHINESE_NAME}}名称或描述"
+          clearable
+          style="width: 300px"
+          @keyup.enter="handleSearch"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+
+        <el-select
+          v-model="searchForm.status"
+          placeholder="状态筛选"
+          clearable
+          style="width: 150px"
+          @change="handleSearch"
+        >
+          <el-option label="全部状态" value="" />
+          <el-option label="活跃" value="active" />
+          <el-option label="未激活" value="inactive" />
+          <el-option label="待处理" value="pending" />
+        </el-select>
+
+        <el-button type="primary" @click="handleSearch">
+          <el-icon><Search /></el-icon>
+          搜索
+        </el-button>
+
+        <el-button @click="handleReset">
+          <el-icon><Refresh /></el-icon>
+          重置
+        </el-button>
+      </div>
+
+      <div class="action-section">
+        <el-button
+          type="primary"
+          @click="handleCreate"
+        >
+          <el-icon><Plus /></el-icon>
+          创建{{CHINESE_NAME}}
+        </el-button>
+
+        <el-button
+          type="danger"
+          :disabled="!hasSelection"
+          @click="handleBatchDelete"
+        >
+          <el-icon><Delete /></el-icon>
+          批量删除
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="list-table">
+      <el-table
+        ref="tableRef"
+        v-loading="{{FEAT_NAME_CAMEL}}Store.listLoading"
+        :data="{{FEAT_NAME_CAMEL}}Store.{{FEAT_NAME_CAMEL}}List"
+        @selection-change="handleSelectionChange"
+        stripe
+        border
+      >
+        <el-table-column type="selection" width="55" />
+
+        <el-table-column prop="name" label="{{CHINESE_NAME}}名称" min-width="200">
+          <template #default="{ row }">
+            <el-link type="primary" @click="handleView(row.id)">
+              {{ row.name }}
+            </el-link>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="description" label="描述" min-width="250" show-overflow-tooltip />
+
+        <el-table-column prop="status" label="状态" width="120">
+          <template #default="{ row }">
+            <el-tag
+              :type="getStatusTagType(row.status)"
+              size="small"
+            >
+              {{ getStatusText(row.status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="createdAt" label="创建时间" width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.createdAt) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="200" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              type="primary"
+              size="small"
+              text
+              @click="handleView(row.id)"
+            >
+              查看
+            </el-button>
+
+            <el-button
+              type="primary"
+              size="small"
+              text
+              @click="handleEdit(row.id)"
+            >
+              编辑
+            </el-button>
+
+            <el-dropdown @command="(command) => handleDropdownCommand(command, row)">
+              <el-button type="primary" size="small" text>
+                更多
+                <el-icon><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    v-if="row.status !== 'active'"
+                    command="activate"
+                  >
+                    激活
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="row.status === 'active'"
+                    command="deactivate"
+                  >
+                    停用
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete" divided>
+                    删除
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="list-pagination">
+      <el-pagination
+        v-model:current-page="{{FEAT_NAME_CAMEL}}Store.currentPage"
+        v-model:page-size="{{FEAT_NAME_CAMEL}}Store.pageSize"
+        :total="{{FEAT_NAME_CAMEL}}Store.total"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handlePageSizeChange"
+        @current-change="handlePageChange"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+/**
+ * {{CHINESE_NAME}}列表页面
+ * 提供{{CHINESE_NAME}}的列表展示、搜索、筛选和批量操作功能
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Refresh, Plus, Delete, ArrowDown } from '@element-plus/icons-vue'
+import { use{{FEAT_NAME_PASCAL}}Store } from '../store/{{FEAT_NAME}}.store'
+import type { {{ENTITY_NAME}} } from '../api/{{FEAT_NAME}}.service'
+
+// 路由和状态管理
+const router = useRouter()
+const {{FEAT_NAME_CAMEL}}Store = use{{FEAT_NAME_PASCAL}}Store()
+
+// 表格引用
+const tableRef = ref()
+
+// 搜索表单
+const searchForm = reactive({
+  keyword: '',
+  status: ''
+})
+
+// 选中的行
+const selectedRows = ref<{{ENTITY_NAME}}[]>([])
+
+/**
+ * 是否有选中项
+ */
+const hasSelection = computed(() => selectedRows.value.length > 0)
+
+/**
+ * 获取状态标签类型
+ */
+function getStatusTagType(status: {{ENTITY_NAME}}['status']) {
+  const typeMap = {
+    active: 'success',
+    inactive: 'info',
+    pending: 'warning'
+  }
+  return typeMap[status] || 'info'
+}
+
+/**
+ * 获取状态文本
+ */
+function getStatusText(status: {{ENTITY_NAME}}['status']) {
+  const textMap = {
+    active: '活跃',
+    inactive: '未激活',
+    pending: '待处理'
+  }
+  return textMap[status] || status
+}
+
+/**
+ * 格式化日期时间
+ */
+function formatDateTime(dateTime: string) {
+  return new Date(dateTime).toLocaleString('zh-CN')
+}
+
+/**
+ * 处理搜索
+ */
+async function handleSearch() {
+  {{FEAT_NAME_CAMEL}}Store.setSearchConditions(searchForm.keyword, searchForm.status)
+  await load{{FEAT_NAME_PASCAL}}List()
+}
+
+/**
+ * 处理重置
+ */
+async function handleReset() {
+  searchForm.keyword = ''
+  searchForm.status = ''
+  {{FEAT_NAME_CAMEL}}Store.resetSearchConditions()
+  await load{{FEAT_NAME_PASCAL}}List()
+}
+
+/**
+ * 处理创建
+ */
+function handleCreate() {
+  router.push('/{{FEAT_NAME}}/create')
+}
+
+/**
+ * 处理查看
+ */
+function handleView(id: string) {
+  router.push(`/{{FEAT_NAME}}/${id}`)
+}
+
+/**
+ * 处理编辑
+ */
+function handleEdit(id: string) {
+  router.push(`/{{FEAT_NAME}}/${id}/edit`)
+}
+
+/**
+ * 处理下拉菜单命令
+ */
+async function handleDropdownCommand(command: string, row: {{ENTITY_NAME}}) {
+  switch (command) {
+    case 'activate':
+      await handleStatusChange(row.id, 'active')
+      break
+    case 'deactivate':
+      await handleStatusChange(row.id, 'inactive')
+      break
+    case 'delete':
+      await handleDelete(row.id)
+      break
+  }
+}
+
+/**
+ * 处理状态更改
+ */
+async function handleStatusChange(id: string, status: {{ENTITY_NAME}}['status']) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要将{{CHINESE_NAME}}状态更改为"${getStatusText(status)}"吗？`,
+      '确认操作',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    await {{FEAT_NAME_CAMEL}}Store.update{{ENTITY_NAME}}Status(id, status)
+    ElMessage.success('状态更新成功')
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('状态更新失败')
+    }
+  }
+}
+
+/**
+ * 处理删除
+ */
+async function handleDelete(id: string) {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这个{{CHINESE_NAME}}吗？删除后无法恢复。',
+      '确认删除',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    await {{FEAT_NAME_CAMEL}}Store.delete{{ENTITY_NAME}}(id)
+    ElMessage.success('删除成功')
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+/**
+ * 处理批量删除
+ */
+async function handleBatchDelete() {
+  if (!hasSelection.value) {
+    ElMessage.warning('请选择要删除的{{CHINESE_NAME}}')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 个{{CHINESE_NAME}}吗？删除后无法恢复。`,
+      '确认批量删除',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    const ids = selectedRows.value.map(row => row.id)
+    await {{FEAT_NAME_CAMEL}}Store.batchDelete{{FEAT_NAME_PASCAL}}(ids)
+    ElMessage.success('批量删除成功')
+
+    // 清空选择
+    tableRef.value?.clearSelection()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('批量删除失败')
+    }
+  }
+}
+
+/**
+ * 处理选择变化
+ */
+function handleSelectionChange(selection: {{ENTITY_NAME}}[]) {
+  selectedRows.value = selection
+}
+
+/**
+ * 处理页码变化
+ */
+async function handlePageChange(page: number) {
+  {{FEAT_NAME_CAMEL}}Store.currentPage = page
+  await load{{FEAT_NAME_PASCAL}}List()
+}
+
+/**
+ * 处理每页大小变化
+ */
+async function handlePageSizeChange(size: number) {
+  {{FEAT_NAME_CAMEL}}Store.pageSize = size
+  {{FEAT_NAME_CAMEL}}Store.currentPage = 1
+  await load{{FEAT_NAME_PASCAL}}List()
+}
+
+/**
+ * 加载{{CHINESE_NAME}}列表
+ */
+async function load{{FEAT_NAME_PASCAL}}List() {
+  try {
+    await {{FEAT_NAME_CAMEL}}Store.fetch{{FEAT_NAME_PASCAL}}List()
+  } catch (error) {
+    ElMessage.error('加载{{CHINESE_NAME}}列表失败')
+  }
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  load{{FEAT_NAME_PASCAL}}List()
+})
+</script>
+
+<style scoped lang="scss">
+.{{FEAT_NAME}}-list {
+  .list-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .search-section {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .action-section {
+      display: flex;
+      gap: 12px;
+    }
+  }
+
+  .list-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .list-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+</style>

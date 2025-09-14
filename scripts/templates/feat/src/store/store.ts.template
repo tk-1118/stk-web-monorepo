@@ -1,0 +1,356 @@
+/**
+ * {{CHINESE_NAME}}状态管理
+ * 使用 Pinia 管理{{CHINESE_NAME}}相关的全局状态
+ *
+ * @author AI Generator
+ * @date {{CURRENT_DATE}}
+ */
+
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+// import { {{FEAT_NAME_CAMEL}}Api, type {{ENTITY_NAME}}, type Query{{FEAT_NAME_PASCAL}}Request } from '../api/{{FEAT_NAME}}.service'
+
+/**
+ * {{ENTITY_NAME}} 实体接口定义
+ */
+interface {{ENTITY_NAME}} {
+  /** {{ENTITY_NAME}} ID */
+  id: string
+  /** {{ENTITY_NAME}} 名称 */
+  name: string
+  /** 描述信息 */
+  description?: string
+  /** 状态 */
+  status: 'active' | 'inactive' | 'pending'
+  /** 创建时间 */
+  createdAt: string
+  /** 更新时间 */
+  updatedAt: string
+}
+
+/**
+ * {{CHINESE_NAME}}状态管理 Store
+ * 管理{{CHINESE_NAME}}列表、当前选中项、加载状态等
+ */
+export const use{{FEAT_NAME_PASCAL}}Store = defineStore('{{FEAT_NAME}}', () => {
+  // ==================== 状态定义 ====================
+
+  /** {{CHINESE_NAME}}列表数据 */
+  const {{FEAT_NAME_CAMEL}}List = ref<{{ENTITY_NAME}}[]>([])
+
+  /** 当前选中的{{CHINESE_NAME}} */
+  const current{{ENTITY_NAME}} = ref<{{ENTITY_NAME}} | null>(null)
+
+  /** 列表加载状态 */
+  const listLoading = ref(false)
+
+  /** 详情加载状态 */
+  const detailLoading = ref(false)
+
+  /** 操作加载状态（创建、更新、删除等） */
+  const actionLoading = ref(false)
+
+  /** 列表总数 */
+  const total = ref(0)
+
+  /** 当前页码 */
+  const currentPage = ref(1)
+
+  /** 每页数量 */
+  const pageSize = ref(20)
+
+  /** 搜索关键词 */
+  const searchKeyword = ref('')
+
+  /** 状态筛选 */
+  const statusFilter = ref<string>('')
+
+  // ==================== 计算属性 ====================
+
+  /** 是否有{{CHINESE_NAME}}数据 */
+  const has{{FEAT_NAME_PASCAL}} = computed(() => {{FEAT_NAME_CAMEL}}List.value.length > 0)
+
+  /** 总页数 */
+  const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
+
+  /** 是否有更多数据 */
+  const hasMore = computed(() => currentPage.value < totalPages.value)
+
+  /** 活跃状态的{{CHINESE_NAME}}数量 */
+  const active{{FEAT_NAME_PASCAL}}Count = computed(() =>
+    {{FEAT_NAME_CAMEL}}List.value.filter(item => item.status === 'active').length
+  )
+
+  // ==================== 操作方法 ====================
+
+  /**
+   * 获取{{CHINESE_NAME}}列表
+   * @param params 查询参数
+   * @param append 是否追加到现有列表（用于分页加载）
+   */
+  async function fetch{{FEAT_NAME_PASCAL}}List(params: any = {}, append = false) {
+    try {
+      listLoading.value = true
+
+      // TODO: 实现 API 调用
+      // const response = await {{FEAT_NAME_CAMEL}}Api.getList(params)
+
+      // 模拟数据 - 实际使用时请替换为真实 API 调用
+      const mockResponse = {
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 20
+      }
+
+      if (append) {
+        {{FEAT_NAME_CAMEL}}List.value.push(...mockResponse.items)
+      } else {
+        {{FEAT_NAME_CAMEL}}List.value = mockResponse.items
+      }
+
+      total.value = mockResponse.total
+      currentPage.value = mockResponse.page
+      pageSize.value = mockResponse.pageSize
+
+      return mockResponse
+    } catch (error) {
+      console.error('获取{{CHINESE_NAME}}列表失败:', error)
+      throw error
+    } finally {
+      listLoading.value = false
+    }
+  }
+
+  /**
+   * 获取{{CHINESE_NAME}}详情
+   * @param id {{ENTITY_NAME}} ID
+   */
+  async function fetch{{ENTITY_NAME}}Detail(id: string) {
+    try {
+      detailLoading.value = true
+
+      // TODO: 实现 API 调用
+      // const {{ENTITY_NAME_LOWER}} = await {{FEAT_NAME_CAMEL}}Api.getById(id)
+
+      // 模拟数据 - 实际使用时请替换为真实 API 调用
+      const {{ENTITY_NAME_LOWER}} = null
+
+      current{{ENTITY_NAME}}.value = {{ENTITY_NAME_LOWER}}
+      return {{ENTITY_NAME_LOWER}}
+    } catch (error) {
+      console.error('获取{{CHINESE_NAME}}详情失败:', error)
+      throw error
+    } finally {
+      detailLoading.value = false
+    }
+  }
+
+  /**
+   * 创建{{CHINESE_NAME}}
+   * @param data 创建数据
+   */
+  async function create{{ENTITY_NAME}}(data: Parameters<typeof {{FEAT_NAME_CAMEL}}Api.create>[0]) {
+    try {
+      actionLoading.value = true
+      const new{{ENTITY_NAME}} = await {{FEAT_NAME_CAMEL}}Api.create(data)
+
+      // 将新创建的{{CHINESE_NAME}}添加到列表开头
+      {{FEAT_NAME_CAMEL}}List.value.unshift(new{{ENTITY_NAME}})
+      total.value += 1
+
+      return new{{ENTITY_NAME}}
+    } catch (error) {
+      console.error('创建{{CHINESE_NAME}}失败:', error)
+      throw error
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  /**
+   * 更新{{CHINESE_NAME}}
+   * @param data 更新数据
+   */
+  async function update{{ENTITY_NAME}}(data: Parameters<typeof {{FEAT_NAME_CAMEL}}Api.update>[0]) {
+    try {
+      actionLoading.value = true
+      const updated{{ENTITY_NAME}} = await {{FEAT_NAME_CAMEL}}Api.update(data)
+
+      // 更新列表中的对应项
+      const index = {{FEAT_NAME_CAMEL}}List.value.findIndex(item => item.id === updated{{ENTITY_NAME}}.id)
+      if (index !== -1) {
+        {{FEAT_NAME_CAMEL}}List.value[index] = updated{{ENTITY_NAME}}
+      }
+
+      // 更新当前选中项
+      if (current{{ENTITY_NAME}}.value?.id === updated{{ENTITY_NAME}}.id) {
+        current{{ENTITY_NAME}}.value = updated{{ENTITY_NAME}}
+      }
+
+      return updated{{ENTITY_NAME}}
+    } catch (error) {
+      console.error('更新{{CHINESE_NAME}}失败:', error)
+      throw error
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  /**
+   * 删除{{CHINESE_NAME}}
+   * @param id {{ENTITY_NAME}} ID
+   */
+  async function delete{{ENTITY_NAME}}(id: string) {
+    try {
+      actionLoading.value = true
+      await {{FEAT_NAME_CAMEL}}Api.delete(id)
+
+      // 从列表中移除
+      const index = {{FEAT_NAME_CAMEL}}List.value.findIndex(item => item.id === id)
+      if (index !== -1) {
+        {{FEAT_NAME_CAMEL}}List.value.splice(index, 1)
+        total.value -= 1
+      }
+
+      // 清除当前选中项（如果是被删除的项）
+      if (current{{ENTITY_NAME}}.value?.id === id) {
+        current{{ENTITY_NAME}}.value = null
+      }
+    } catch (error) {
+      console.error('删除{{CHINESE_NAME}}失败:', error)
+      throw error
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  /**
+   * 批量删除{{CHINESE_NAME}}
+   * @param ids {{ENTITY_NAME}} ID 数组
+   */
+  async function batchDelete{{FEAT_NAME_PASCAL}}(ids: string[]) {
+    try {
+      actionLoading.value = true
+      await {{FEAT_NAME_CAMEL}}Api.batchDelete(ids)
+
+      // 从列表中移除被删除的项
+      {{FEAT_NAME_CAMEL}}List.value = {{FEAT_NAME_CAMEL}}List.value.filter(item => !ids.includes(item.id))
+      total.value -= ids.length
+
+      // 清除当前选中项（如果在被删除的项中）
+      if (current{{ENTITY_NAME}}.value && ids.includes(current{{ENTITY_NAME}}.value.id)) {
+        current{{ENTITY_NAME}}.value = null
+      }
+    } catch (error) {
+      console.error('批量删除{{CHINESE_NAME}}失败:', error)
+      throw error
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  /**
+   * 更新{{CHINESE_NAME}}状态
+   * @param id {{ENTITY_NAME}} ID
+   * @param status 新状态
+   */
+  async function update{{ENTITY_NAME}}Status(id: string, status: {{ENTITY_NAME}}['status']) {
+    try {
+      actionLoading.value = true
+      const updated{{ENTITY_NAME}} = await {{FEAT_NAME_CAMEL}}Api.updateStatus(id, status)
+
+      // 更新列表中的对应项
+      const index = {{FEAT_NAME_CAMEL}}List.value.findIndex(item => item.id === id)
+      if (index !== -1) {
+        {{FEAT_NAME_CAMEL}}List.value[index] = updated{{ENTITY_NAME}}
+      }
+
+      // 更新当前选中项
+      if (current{{ENTITY_NAME}}.value?.id === id) {
+        current{{ENTITY_NAME}}.value = updated{{ENTITY_NAME}}
+      }
+
+      return updated{{ENTITY_NAME}}
+    } catch (error) {
+      console.error('更新{{CHINESE_NAME}}状态失败:', error)
+      throw error
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  /**
+   * 设置搜索条件
+   * @param keyword 搜索关键词
+   * @param status 状态筛选
+   */
+  function setSearchConditions(keyword: string = '', status: string = '') {
+    searchKeyword.value = keyword
+    statusFilter.value = status
+    currentPage.value = 1 // 重置页码
+  }
+
+  /**
+   * 重置搜索条件
+   */
+  function resetSearchConditions() {
+    searchKeyword.value = ''
+    statusFilter.value = ''
+    currentPage.value = 1
+  }
+
+  /**
+   * 设置当前{{CHINESE_NAME}}
+   * @param {{ENTITY_NAME_LOWER}} {{CHINESE_NAME}}对象
+   */
+  function setCurrent{{ENTITY_NAME}}({{ENTITY_NAME_LOWER}}: {{ENTITY_NAME}} | null) {
+    current{{ENTITY_NAME}}.value = {{ENTITY_NAME_LOWER}}
+  }
+
+  /**
+   * 清空所有数据
+   */
+  function clearAll() {
+    {{FEAT_NAME_CAMEL}}List.value = []
+    current{{ENTITY_NAME}}.value = null
+    total.value = 0
+    currentPage.value = 1
+    resetSearchConditions()
+  }
+
+  // ==================== 返回 Store 接口 ====================
+
+  return {
+    // 状态
+    {{FEAT_NAME_CAMEL}}List,
+    current{{ENTITY_NAME}},
+    listLoading,
+    detailLoading,
+    actionLoading,
+    total,
+    currentPage,
+    pageSize,
+    searchKeyword,
+    statusFilter,
+
+    // 计算属性
+    has{{FEAT_NAME_PASCAL}},
+    totalPages,
+    hasMore,
+    active{{FEAT_NAME_PASCAL}}Count,
+
+    // 方法
+    fetch{{FEAT_NAME_PASCAL}}List,
+    fetch{{ENTITY_NAME}}Detail,
+    create{{ENTITY_NAME}},
+    update{{ENTITY_NAME}},
+    delete{{ENTITY_NAME}},
+    batchDelete{{FEAT_NAME_PASCAL}},
+    update{{ENTITY_NAME}}Status,
+    setSearchConditions,
+    resetSearchConditions,
+    setCurrent{{ENTITY_NAME}},
+    clearAll
+  }
+})
