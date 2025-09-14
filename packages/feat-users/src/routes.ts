@@ -8,6 +8,7 @@ import type { RouteRecordRaw } from 'vue-router'
 export const usersRoutes: RouteRecordRaw[] = [
   {
     path: '/users',
+    redirect: { path: '/users/list' },
     name: 'UsersLayout',
     component: () => import('./pages/UserLayout.vue'),
     meta: {
@@ -16,21 +17,12 @@ export const usersRoutes: RouteRecordRaw[] = [
     },
     children: [
       {
-        path: '/list',
+        path: 'list',
         name: 'UserList',
         component: () => import('./pages/UserList.vue'),
         meta: {
           title: '用户列表',
           breadcrumb: '用户列表'
-        }
-      },
-      {
-        path: ':id',
-        name: 'UserDetail',
-        component: () => import('./pages/UserDetail.vue'),
-        meta: {
-          title: '用户详情',
-          breadcrumb: '用户详情'
         }
       },
       {
@@ -49,6 +41,15 @@ export const usersRoutes: RouteRecordRaw[] = [
         meta: {
           title: '编辑用户',
           breadcrumb: '编辑用户'
+        }
+      },
+      {
+        path: ':id',
+        name: 'UserDetail',
+        component: () => import('./pages/UserDetail.vue'),
+        meta: {
+          title: '用户详情',
+          breadcrumb: '用户详情'
         }
       }
     ]

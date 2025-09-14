@@ -4,28 +4,31 @@
   "include": [],
   "references": [
     {
-      "path": "../../packages/i18n"
-    },
-    {
-      "path": "../../packages/store"
-    },
-    {
       "path": "../../packages/utils"
-    },
-    {
-      "path": "../../packages/hooks"
     },
     {
       "path": "../../packages/ui"
     },
     {
+      "path": "../../packages/store"
+    },
+    {
       "path": "../../packages/models"
     },
     {
-      "path": "../../packages/api"
+      "path": "../../packages/mocks"
+    },
+    {
+      "path": "../../packages/i18n"
+    },
+    {
+      "path": "../../packages/hooks"
     },
     {
       "path": "../../packages/feat-users"
+    },
+    {
+      "path": "../../packages/api"
     },
     {
       "path": "./tsconfig.app.json"

@@ -11,6 +11,7 @@ import type { RouteRecordRaw } from 'vue-router'
 export const {{FEAT_NAME_CAMEL}}Routes: RouteRecordRaw[] = [
   {
     path: '/{{FEAT_NAME}}',
+    redirect: '/{{FEAT_NAME}}/list',
     name: '{{FEAT_NAME_PASCAL}}Layout',
     component: () => import('./pages/{{FEAT_NAME_PASCAL}}Layout.vue'),
     meta: {
@@ -19,21 +20,12 @@ export const {{FEAT_NAME_CAMEL}}Routes: RouteRecordRaw[] = [
     },
     children: [
       {
-        path: '/list',
+        path: 'list',
         name: '{{FEAT_NAME_PASCAL}}List',
         component: () => import('./pages/{{FEAT_NAME_PASCAL}}List.vue'),
         meta: {
           title: '{{CHINESE_NAME}}列表',
           breadcrumb: '{{CHINESE_NAME}}列表'
-        }
-      },
-      {
-        path: ':id',
-        name: '{{FEAT_NAME_PASCAL}}Detail',
-        component: () => import('./pages/{{FEAT_NAME_PASCAL}}Detail.vue'),
-        meta: {
-          title: '{{CHINESE_NAME}}详情',
-          breadcrumb: '{{CHINESE_NAME}}详情'
         }
       },
       {
@@ -52,6 +44,15 @@ export const {{FEAT_NAME_CAMEL}}Routes: RouteRecordRaw[] = [
         meta: {
           title: '编辑{{CHINESE_NAME}}',
           breadcrumb: '编辑{{CHINESE_NAME}}'
+        }
+      },
+       {
+        path: ':id',
+        name: '{{FEAT_NAME_PASCAL}}Detail',
+        component: () => import('./pages/{{FEAT_NAME_PASCAL}}Detail.vue'),
+        meta: {
+          title: '{{CHINESE_NAME}}详情',
+          breadcrumb: '{{CHINESE_NAME}}详情'
         }
       }
     ]
